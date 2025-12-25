@@ -936,10 +936,11 @@ export default function Map() {
                     }
 
                     marker.bindTooltip(value.callsign, {
-                        opacity: 0.7,
-                        permanent: true,
-                        direction: 'bottom',
-                        offset: [12, 35],
+                        opacity: 0.8,
+                        permanent: false,
+                        direction: 'top',
+                        offset: [0, -10],
+                        className: 'tactical-tooltip',
                     });
 
                     marker.on('click', (e) => {
@@ -949,18 +950,35 @@ export default function Map() {
                     });
 
                     if (value.mil_std_2525c !== null && value.icon === null) {
-                        const options = { size: 25, direction: undefined };
+                        const options: any = { size: 25, direction: undefined };
                         if (value.point !== null && value.point.azimuth !== null) {
                             options.direction = value.point.azimuth;
                         } else if (value.point !== null && value.point.course !== null) {
                             options.direction = value.point.course;
                         }
+                        
+                        // Apply tactical theme colors based on affiliation
+                        const affiliation = value.mil_std_2525c.charAt(1); // Extract affiliation character
+                        if (affiliation === 'f') {
+                            options.fillColor = '#64FFDA'; // tacticalCyan for friendly
+                            options.iconColor = '#64FFDA';
+                        } else if (affiliation === 'h') {
+                            options.fillColor = '#FF6B6B'; // tacticalRed for hostile
+                            options.iconColor = '#FF6B6B';
+                        } else if (affiliation === 'n') {
+                            options.fillColor = '#51CF66'; // tacticalGreen for neutral
+                            options.iconColor = '#51CF66';
+                        } else if (affiliation === 'u') {
+                            options.fillColor = '#FFB84D'; // tacticalOrange for unknown
+                            options.iconColor = '#FFB84D';
+                        }
+                        
                         const symbol = new milsymbol.default.Symbol(value.mil_std_2525c, options);
                         marker.setIcon(L.divIcon({
                             className: '',
                             html: symbol.asSVG(),
                             iconAnchor: new L.Point(symbol.getAnchor().x, symbol.getAnchor().y),
-                            tooltipAnchor: [-13, -13],
+                            tooltipAnchor: [0, -15],
                         }));
                     } else if (value.icon !== null) {
                         marker.setIcon(L.icon({
