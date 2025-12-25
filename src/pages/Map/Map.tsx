@@ -9,7 +9,7 @@ import 'leaflet-rotatedmarker';
 import { Divider, Drawer, Image, Paper, Table, Text, useComputedColorScheme, ActionIcon, Group, Tooltip, Badge, Stack, Switch, SegmentedControl, Button } from '@mantine/core';
 import axios from 'axios';
 import { notifications } from '@mantine/notifications';
-import { IconX, IconRuler, IconMapPin, IconCircle, IconRoute, IconCrosshair, IconLayers, Icon3dCubeSphere, IconTarget, IconCurrentLocation } from '@tabler/icons-react';
+import { IconX, IconRuler, IconMapPin, IconCircle, IconRoute, IconCrosshair, IconStack2, Icon3dCubeSphere, IconTarget, IconCurrentLocation } from '@tabler/icons-react';
 import * as milsymbol from 'milsymbol';
 import { useDisclosure } from '@mantine/hooks';
 import GreatCircle from './GreatCircle';
@@ -230,10 +230,12 @@ export default function Map() {
 
     function MapContext() {
         const map = useMap();
+        const fullscreenControlRef = useRef<L.Control.Fullscreen | null>(null);
         
         useEffect(() => {
             mapRef.current = map;
             const fullscreenControl = L.control.fullscreen();
+            fullscreenControlRef.current = fullscreenControl;
             map.addControl(fullscreenControl);
         }, [map]);
 
@@ -454,7 +456,7 @@ export default function Map() {
 
                 // janky fix for duplicate fullscreen buttons
                 const elementsToRemove =
-                    fullscreenControl.getContainer()?.getElementsByClassName('leaflet-control-zoom-fullscreen') ?? [];
+                    fullscreenControlRef.current?.getContainer()?.getElementsByClassName('leaflet-control-zoom-fullscreen') ?? [];
                 for (let i = 0; i < elementsToRemove.length; i++) {
                     elementsToRemove[i].remove();
                 }
@@ -612,7 +614,7 @@ export default function Map() {
                             color="tacticalCyan"
                             onClick={() => setShowToolbar(!showToolbar)}
                         >
-                            <IconLayers size={18} />
+                            <IconStack2 size={18} />
                         </ActionIcon>
                     </Tooltip>
                 </Group>

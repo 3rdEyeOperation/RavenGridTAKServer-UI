@@ -33,12 +33,6 @@ export default function App() {
                 backdropFilter: 'blur(10px)',
                 boxShadow: '0 0 30px rgba(100, 255, 218, 0.3)',
               },
-              title: {
-                color: '#64ffda',
-                fontWeight: 700,
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-              },
               description: {
                 color: '#e8eaed',
               },
