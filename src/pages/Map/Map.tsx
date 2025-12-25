@@ -45,7 +45,8 @@ export default function Map() {
     const [measureMode, setMeasureMode] = useState(false);
     const [measurePoints, setMeasurePoints] = useState<L.LatLng[]>([]);
     const [linePoints, setLinePoints] = useState<L.LatLng[]>([]);
-    const [drawMode, setDrawMode] = useState<'none' | 'marker' | 'circle' | 'line' | 'polygon' | 'rectangle'>('none');
+    const [polygonPoints, setPolygonPoints] = useState<L.LatLng[]>([]);
+    const [drawMode, setDrawMode] = useState<'none' | 'marker' | 'circle' | 'line' | 'polygon' | 'rectangle' | 'hostile' | 'friendly' | 'waypoint' | 'alert' | 'casevac'>('none');
     const [showTrails, setShowTrails] = useState(false);
     const [mapStyle, setMapStyle] = useState<'satellite' | 'terrain' | 'dark' | 'tactical'>('satellite');
     const [currentCoords, setCurrentCoords] = useState<{ lat: number; lng: number } | null>(null);
@@ -55,6 +56,7 @@ export default function Map() {
     const [showC2Dashboard, setShowC2Dashboard] = useState(true);
     const [showThreatTracker, setShowThreatTracker] = useState(false);
     const [showBattleRhythm, setShowBattleRhythm] = useState(false);
+    const [tempMarker, setTempMarker] = useState<L.Marker | null>(null);
     const mapRef = useRef<L.Map | null>(null);
     const measureLayerRef = useRef<L.LayerGroup>(new L.LayerGroup());
     const drawLayerRef = useRef<L.LayerGroup>(new L.LayerGroup());
@@ -257,6 +259,25 @@ export default function Map() {
         useMapEvents({
             mousemove: (e) => {
                 setCurrentCoords({ lat: e.latlng.lat, lng: e.latlng.lng });
+                
+                // Show temporary marker for placement tools
+                if (['marker', 'hostile', 'friendly', 'waypoint', 'alert', 'casevac'].includes(drawMode)) {
+                    if (tempMarker) {
+                        tempMarker.setLatLng(e.latlng);
+                    } else {
+                        const icon = L.divIcon({
+                            className: 'tactical-marker-temp',
+                            html: `<div style="background: rgba(100, 255, 218, 0.5); width: 20px; height: 20px; border-radius: 50%; border: 2px solid #64ffda; box-shadow: 0 0 15px #64ffda;"></div>`,
+                            iconSize: [20, 20],
+                            iconAnchor: [10, 10]
+                        });
+                        const marker = L.marker(e.latlng, { icon }).addTo(map);
+                        setTempMarker(marker);
+                    }
+                } else if (tempMarker) {
+                    map.removeLayer(tempMarker);
+                    setTempMarker(null);
+                }
             },
             click: (e) => {
                 if (measureMode) {
@@ -325,30 +346,208 @@ export default function Map() {
                         }
                     }
                 } else if (drawMode === 'marker') {
+                    // Clear temp marker
+                    if (tempMarker) {
+                        map.removeLayer(tempMarker);
+                        setTempMarker(null);
+                    }
+                    
                     const marker = L.marker(e.latlng, {
                         icon: L.divIcon({
                             className: 'tactical-marker',
                             html: '<div style="background: #64ffda; width: 16px; height: 16px; border-radius: 50%; border: 3px solid #0a0e14; box-shadow: 0 0 15px #64ffda;"></div>',
                             iconSize: [16, 16],
                             iconAnchor: [8, 8]
-                        })
+                        }),
+                        draggable: true
                     });
                     
                     const popup = L.popup()
                         .setContent(`<div style="color: #64ffda; font-family: 'JetBrains Mono', monospace; background: #0a0e14; padding: 8px; border-radius: 4px;">
-                            <strong style="color: #00e38a;">MARKER</strong><br>
+                            <strong style="color: #00e38a;">SELF MARKER</strong><br>
                             <strong>Lat:</strong> ${e.latlng.lat.toFixed(6)}<br>
-                            <strong>Lon:</strong> ${e.latlng.lng.toFixed(6)}
+                            <strong>Lon:</strong> ${e.latlng.lng.toFixed(6)}<br>
+                            <button onclick="this.closest('.leaflet-popup').remove()" style="margin-top: 4px; background: #ff4747; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;">Delete</button>
                         </div>`);
                     
                     marker.bindPopup(popup).openPopup();
                     drawLayerRef.current.addLayer(marker);
                     
                     notifications.show({
-                        title: 'Marker Placed',
+                        title: 'Self Marker Placed',
                         message: `${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)}`,
                         color: 'tacticalCyan',
                         autoClose: 2000,
+                    });
+                } else if (drawMode === 'hostile') {
+                    if (tempMarker) {
+                        map.removeLayer(tempMarker);
+                        setTempMarker(null);
+                    }
+                    
+                    const marker = L.marker(e.latlng, {
+                        icon: L.divIcon({
+                            className: 'tactical-marker-hostile',
+                            html: '<div style="background: #ff4747; width: 20px; height: 20px; border-radius: 50%; border: 3px solid #0a0e14; box-shadow: 0 0 20px #ff4747; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 12px;">H</div>',
+                            iconSize: [20, 20],
+                            iconAnchor: [10, 10]
+                        }),
+                        draggable: true
+                    });
+                    
+                    const popup = L.popup()
+                        .setContent(`<div style="color: #ff4747; font-family: 'JetBrains Mono', monospace; background: #0a0e14; padding: 8px; border-radius: 4px;">
+                            <strong style="color: #ff4747;">⚠ HOSTILE CONTACT</strong><br>
+                            <strong>Lat:</strong> ${e.latlng.lat.toFixed(6)}<br>
+                            <strong>Lon:</strong> ${e.latlng.lng.toFixed(6)}<br>
+                            <strong>Type:</strong> Unknown<br>
+                            <button onclick="this.closest('.leaflet-popup').remove()" style="margin-top: 4px; background: #ff4747; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;">Delete</button>
+                        </div>`);
+                    
+                    marker.bindPopup(popup).openPopup();
+                    drawLayerRef.current.addLayer(marker);
+                    
+                    notifications.show({
+                        title: 'Hostile Marker Placed',
+                        message: 'Hostile contact marked',
+                        color: 'tacticalRed',
+                        autoClose: 2000,
+                    });
+                } else if (drawMode === 'friendly') {
+                    if (tempMarker) {
+                        map.removeLayer(tempMarker);
+                        setTempMarker(null);
+                    }
+                    
+                    const marker = L.marker(e.latlng, {
+                        icon: L.divIcon({
+                            className: 'tactical-marker-friendly',
+                            html: '<div style="background: #00e38a; width: 20px; height: 20px; border-radius: 50%; border: 3px solid #0a0e14; box-shadow: 0 0 20px #00e38a; display: flex; align-items: center; justify-content: center; color: #0a0e14; font-weight: bold; font-size: 12px;">F</div>',
+                            iconSize: [20, 20],
+                            iconAnchor: [10, 10]
+                        }),
+                        draggable: true
+                    });
+                    
+                    const popup = L.popup()
+                        .setContent(`<div style="color: #00e38a; font-family: 'JetBrains Mono', monospace; background: #0a0e14; padding: 8px; border-radius: 4px;">
+                            <strong style="color: #00e38a;">✓ FRIENDLY UNIT</strong><br>
+                            <strong>Lat:</strong> ${e.latlng.lat.toFixed(6)}<br>
+                            <strong>Lon:</strong> ${e.latlng.lng.toFixed(6)}<br>
+                            <strong>Status:</strong> Active<br>
+                            <button onclick="this.closest('.leaflet-popup').remove()" style="margin-top: 4px; background: #ff4747; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;">Delete</button>
+                        </div>`);
+                    
+                    marker.bindPopup(popup).openPopup();
+                    drawLayerRef.current.addLayer(marker);
+                    
+                    notifications.show({
+                        title: 'Friendly Marker Placed',
+                        message: 'Friendly unit marked',
+                        color: 'tacticalGreen',
+                        autoClose: 2000,
+                    });
+                } else if (drawMode === 'waypoint') {
+                    if (tempMarker) {
+                        map.removeLayer(tempMarker);
+                        setTempMarker(null);
+                    }
+                    
+                    const marker = L.marker(e.latlng, {
+                        icon: L.divIcon({
+                            className: 'tactical-marker-waypoint',
+                            html: '<div style="background: #1a7fff; width: 18px; height: 18px; clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); border: 2px solid #0a0e14; box-shadow: 0 0 20px #1a7fff;"></div>',
+                            iconSize: [18, 18],
+                            iconAnchor: [9, 9]
+                        }),
+                        draggable: true
+                    });
+                    
+                    const popup = L.popup()
+                        .setContent(`<div style="color: #1a7fff; font-family: 'JetBrains Mono', monospace; background: #0a0e14; padding: 8px; border-radius: 4px;">
+                            <strong style="color: #1a7fff;">📍 WAYPOINT</strong><br>
+                            <strong>Lat:</strong> ${e.latlng.lat.toFixed(6)}<br>
+                            <strong>Lon:</strong> ${e.latlng.lng.toFixed(6)}<br>
+                            <button onclick="this.closest('.leaflet-popup').remove()" style="margin-top: 4px; background: #ff4747; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;">Delete</button>
+                        </div>`);
+                    
+                    marker.bindPopup(popup).openPopup();
+                    drawLayerRef.current.addLayer(marker);
+                    
+                    notifications.show({
+                        title: 'Waypoint Placed',
+                        message: 'Navigation waypoint marked',
+                        color: 'tacticalBlue',
+                        autoClose: 2000,
+                    });
+                } else if (drawMode === 'alert') {
+                    if (tempMarker) {
+                        map.removeLayer(tempMarker);
+                        setTempMarker(null);
+                    }
+                    
+                    const marker = L.marker(e.latlng, {
+                        icon: L.divIcon({
+                            className: 'tactical-marker-alert',
+                            html: '<div style="background: #ff9721; width: 22px; height: 22px; clip-path: polygon(50% 0%, 100% 100%, 0% 100%); border: 2px solid #0a0e14; box-shadow: 0 0 25px #ff9721; display: flex; align-items: center; justify-content: center; color: #0a0e14; font-weight: bold; font-size: 16px;">!</div>',
+                            iconSize: [22, 22],
+                            iconAnchor: [11, 11]
+                        }),
+                        draggable: true
+                    });
+                    
+                    const popup = L.popup()
+                        .setContent(`<div style="color: #ff9721; font-family: 'JetBrains Mono', monospace; background: #0a0e14; padding: 8px; border-radius: 4px;">
+                            <strong style="color: #ff9721;">⚠ ALERT</strong><br>
+                            <strong>Lat:</strong> ${e.latlng.lat.toFixed(6)}<br>
+                            <strong>Lon:</strong> ${e.latlng.lng.toFixed(6)}<br>
+                            <strong>Priority:</strong> Medium<br>
+                            <button onclick="this.closest('.leaflet-popup').remove()" style="margin-top: 4px; background: #ff4747; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;">Delete</button>
+                        </div>`);
+                    
+                    marker.bindPopup(popup).openPopup();
+                    drawLayerRef.current.addLayer(marker);
+                    
+                    notifications.show({
+                        title: 'Alert Placed',
+                        message: 'Alert marker placed',
+                        color: 'tacticalOrange',
+                        autoClose: 2000,
+                    });
+                } else if (drawMode === 'casevac') {
+                    if (tempMarker) {
+                        map.removeLayer(tempMarker);
+                        setTempMarker(null);
+                    }
+                    
+                    const marker = L.marker(e.latlng, {
+                        icon: L.divIcon({
+                            className: 'tactical-marker-casevac',
+                            html: '<div style="background: #ff4747; width: 24px; height: 24px; border-radius: 4px; border: 3px solid white; box-shadow: 0 0 25px #ff4747; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 16px;">+</div>',
+                            iconSize: [24, 24],
+                            iconAnchor: [12, 12]
+                        }),
+                        draggable: true
+                    });
+                    
+                    const popup = L.popup()
+                        .setContent(`<div style="color: #ff4747; font-family: 'JetBrains Mono', monospace; background: #0a0e14; padding: 8px; border-radius: 4px;">
+                            <strong style="color: #ff4747;">🚑 CASEVAC</strong><br>
+                            <strong>Lat:</strong> ${e.latlng.lat.toFixed(6)}<br>
+                            <strong>Lon:</strong> ${e.latlng.lng.toFixed(6)}<br>
+                            <strong>Priority:</strong> IMMEDIATE<br>
+                            <strong>Status:</strong> Pending<br>
+                            <button onclick="this.closest('.leaflet-popup').remove()" style="margin-top: 4px; background: #ff4747; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;">Delete</button>
+                        </div>`);
+                    
+                    marker.bindPopup(popup).openPopup();
+                    drawLayerRef.current.addLayer(marker);
+                    
+                    notifications.show({
+                        title: 'CASEVAC Requested',
+                        message: 'Medical evacuation point marked',
+                        color: 'tacticalRed',
+                        autoClose: 3000,
                     });
                 } else if (drawMode === 'circle') {
                     const circle = L.circle(e.latlng, {
@@ -414,6 +613,150 @@ export default function Map() {
                             autoClose: 2000,
                         });
                     }
+                } else if (drawMode === 'polygon') {
+                    const newPolygonPoints = [...polygonPoints, e.latlng];
+                    setPolygonPoints(newPolygonPoints);
+                    
+                    // Add marker at click point
+                    const marker = L.circleMarker(e.latlng, {
+                        radius: 5,
+                        fillColor: '#00e38a',
+                        color: '#0a0e14',
+                        weight: 2,
+                        opacity: 1,
+                        fillOpacity: 1
+                    });
+                    drawLayerRef.current.addLayer(marker);
+                    
+                    if (newPolygonPoints.length >= 3) {
+                        // Show temp polygon
+                        const tempPolygon = L.polygon(newPolygonPoints, {
+                            color: '#00e38a',
+                            fillColor: '#00e38a',
+                            fillOpacity: 0.2,
+                            weight: 2,
+                            dashArray: '5, 5'
+                        });
+                        drawLayerRef.current.addLayer(tempPolygon);
+                        
+                        notifications.show({
+                            title: 'Polygon Point Added',
+                            message: `${newPolygonPoints.length} vertices. Right-click to complete.`,
+                            color: 'tacticalGreen',
+                            autoClose: 2000,
+                        });
+                    }
+                } else if (drawMode === 'rectangle') {
+                    if (polygonPoints.length === 0) {
+                        // First corner
+                        setPolygonPoints([e.latlng]);
+                        const marker = L.circleMarker(e.latlng, {
+                            radius: 6,
+                            fillColor: '#1a7fff',
+                            color: '#0a0e14',
+                            weight: 2,
+                            opacity: 1,
+                            fillOpacity: 1
+                        });
+                        drawLayerRef.current.addLayer(marker);
+                        
+                        notifications.show({
+                            title: 'Rectangle Started',
+                            message: 'Click opposite corner',
+                            color: 'tacticalBlue',
+                            autoClose: 2000,
+                        });
+                    } else {
+                        // Second corner - complete rectangle
+                        const bounds = L.latLngBounds([polygonPoints[0], e.latlng]);
+                        const rectangle = L.rectangle(bounds, {
+                            color: '#1a7fff',
+                            fillColor: '#1a7fff',
+                            fillOpacity: 0.2,
+                            weight: 2
+                        });
+                        
+                        const popup = L.popup()
+                            .setContent(`<div style="color: #1a7fff; font-family: 'JetBrains Mono', monospace; background: #0a0e14; padding: 8px; border-radius: 4px;">
+                                <strong style="color: #1a7fff;">RECTANGLE</strong><br>
+                                <strong>Area:</strong> ${(rectangle.getBounds().toBBoxString())}<br>
+                            </div>`);
+                        
+                        rectangle.bindPopup(popup).openPopup();
+                        drawLayerRef.current.addLayer(rectangle);
+                        
+                        // Reset for next rectangle
+                        setPolygonPoints([]);
+                        setDrawMode('none');
+                        setSelectedTool('none');
+                        
+                        notifications.show({
+                            title: 'Rectangle Completed',
+                            message: 'Rectangle drawn successfully',
+                            color: 'tacticalBlue',
+                            autoClose: 2000,
+                        });
+                    }
+                }
+            },
+            contextmenu: (e) => {
+                // Right-click handler for completing polygons
+                if (drawMode === 'polygon' && polygonPoints.length >= 3) {
+                    const polygon = L.polygon(polygonPoints, {
+                        color: '#00e38a',
+                        fillColor: '#00e38a',
+                        fillOpacity: 0.2,
+                        weight: 2
+                    });
+                    
+                    const area = L.GeometryUtil.geodesicArea(polygon.getLatLngs()[0] as L.LatLng[]);
+                    const popup = L.popup()
+                        .setContent(`<div style="color: #00e38a; font-family: 'JetBrains Mono', monospace; background: #0a0e14; padding: 8px; border-radius: 4px;">
+                            <strong style="color: #00e38a;">POLYGON</strong><br>
+                            <strong>Vertices:</strong> ${polygonPoints.length}<br>
+                            <strong>Area:</strong> ${(area / 1000000).toFixed(3)} km²<br>
+                        </div>`);
+                    
+                    polygon.bindPopup(popup).openPopup();
+                    drawLayerRef.current.addLayer(polygon);
+                    
+                    // Reset
+                    setPolygonPoints([]);
+                    setDrawMode('none');
+                    setSelectedTool('none');
+                    
+                    notifications.show({
+                        title: 'Polygon Completed',
+                        message: `${polygonPoints.length} vertices, ${(area / 1000000).toFixed(3)} km²`,
+                        color: 'tacticalGreen',
+                        autoClose: 2000,
+                    });
+                } else if (drawMode === 'line' && linePoints.length >= 2) {
+                    // Complete line drawing on right-click
+                    setLinePoints([]);
+                    drawLineRef.current = null;
+                    setDrawMode('none');
+                    setSelectedTool('none');
+                    
+                    notifications.show({
+                        title: 'Line Completed',
+                        message: 'Line drawing finished',
+                        color: 'tacticalOrange',
+                        autoClose: 2000,
+                    });
+                } else if (measureMode && measurePoints.length >= 2) {
+                    // Complete measurement
+                    setMeasureMode(false);
+                    setMeasurePoints([]);
+                    measureLineRef.current = null;
+                    setSelectedTool('none');
+                    
+                    notifications.show({
+                        title: 'Measurement Completed',
+                        message: 'Measurement saved',
+                        color: 'tacticalCyan',
+                        autoClose: 2000,
+                    });
                 }
             }
         });
@@ -426,11 +769,42 @@ export default function Map() {
         
         useEffect(() => {
             mapRef.current = map;
+            
+            // Add ESC key handler to cancel drawing modes
+            const handleKeyDown = (e: KeyboardEvent) => {
+                if (e.key === 'Escape') {
+                    setMeasureMode(false);
+                    setDrawMode('none');
+                    setSelectedTool('none');
+                    setMeasurePoints([]);
+                    setLinePoints([]);
+                    setPolygonPoints([]);
+                    
+                    if (tempMarker) {
+                        map.removeLayer(tempMarker);
+                        setTempMarker(null);
+                    }
+                    
+                    notifications.show({
+                        title: 'Tool Cancelled',
+                        message: 'Drawing mode cancelled',
+                        color: 'gray',
+                        autoClose: 1500,
+                    });
+                }
+            };
+            
+            document.addEventListener('keydown', handleKeyDown);
+            
             const fullscreenControl = L.control.fullscreen();
             fullscreenControlRef.current = fullscreenControl;
             map.addControl(fullscreenControl);
             map.addLayer(measureLayerRef.current);
             map.addLayer(drawLayerRef.current);
+            
+            return () => {
+                document.removeEventListener('keydown', handleKeyDown);
+            };
         }, [map]);
 
         useEffect(() => {
@@ -662,19 +1036,199 @@ export default function Map() {
 
     return (
         <>
+            {/* Active Tool Indicator (Top Center) */}
+            {(selectedTool !== 'none' || measureMode || drawMode !== 'none') && (
+                <Paper
+                    shadow="xl"
+                    p="sm"
+                    className="tactical-card"
+                    style={{
+                        position: 'fixed',
+                        top: '5.5rem',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        zIndex: 1000,
+                        backgroundColor: 'rgba(10, 14, 20, 0.95)',
+                        border: '2px solid rgba(100, 255, 218, 0.6)',
+                        backdropFilter: 'blur(10px)',
+                        boxShadow: '0 0 30px rgba(100, 255, 218, 0.4)',
+                        minWidth: '300px',
+                        animation: 'pulse 2s ease-in-out infinite',
+                    }}
+                >
+                    <Group justify="space-between" align="center">
+                        <Group gap="xs">
+                            <Badge
+                                size="lg"
+                                variant="filled"
+                                color="tacticalCyan"
+                                className="status-active"
+                                leftSection={<IconActivity size={14} />}
+                            >
+                                TOOL ACTIVE
+                            </Badge>
+                            <Text size="sm" fw={700} className="text-glow-cyan" style={{ textTransform: 'uppercase' }}>
+                                {measureMode ? 'Measuring Distance' : 
+                                 drawMode === 'marker' ? 'Self Marker' :
+                                 drawMode === 'hostile' ? 'Hostile Marker' :
+                                 drawMode === 'friendly' ? 'Friendly Marker' :
+                                 drawMode === 'waypoint' ? 'Waypoint' :
+                                 drawMode === 'alert' ? 'Alert' :
+                                 drawMode === 'casevac' ? 'CASEVAC' :
+                                 drawMode === 'circle' ? 'Circle' :
+                                 drawMode === 'line' ? 'Line Drawing' :
+                                 drawMode === 'polygon' ? 'Polygon Drawing' :
+                                 drawMode === 'rectangle' ? 'Rectangle' :
+                                 selectedTool}
+                            </Text>
+                        </Group>
+                        <Tooltip label="Press ESC to cancel">
+                            <ActionIcon
+                                size="sm"
+                                variant="subtle"
+                                color="gray"
+                                onClick={() => {
+                                    setMeasureMode(false);
+                                    setDrawMode('none');
+                                    setSelectedTool('none');
+                                    setMeasurePoints([]);
+                                    setLinePoints([]);
+                                    setPolygonPoints([]);
+                                    if (tempMarker && mapRef.current) {
+                                        mapRef.current.removeLayer(tempMarker);
+                                        setTempMarker(null);
+                                    }
+                                }}
+                            >
+                                <IconX size={14} />
+                            </ActionIcon>
+                        </Tooltip>
+                    </Group>
+                    <Text size="xs" c="dimmed" mt="xs">
+                        {measureMode && 'Click points on map. Right-click to finish measurement.'}
+                        {drawMode === 'marker' && 'Click on map to place your position marker.'}
+                        {drawMode === 'hostile' && 'Click on map to mark hostile contact.'}
+                        {drawMode === 'friendly' && 'Click on map to mark friendly unit.'}
+                        {drawMode === 'waypoint' && 'Click on map to place navigation waypoint.'}
+                        {drawMode === 'alert' && 'Click on map to place alert marker.'}
+                        {drawMode === 'casevac' && 'Click on map to request medical evacuation.'}
+                        {drawMode === 'circle' && 'Click on map to draw 1km radius circle.'}
+                        {drawMode === 'line' && 'Click to add points. Right-click to finish line.'}
+                        {drawMode === 'polygon' && 'Click vertices (minimum 3). Right-click to complete polygon.'}
+                        {drawMode === 'rectangle' && 'Click two opposite corners to draw rectangle.'}
+                    </Text>
+                </Paper>
+            )}
+
             {/* ATAK-Style Toolbar (Left Side) */}
             <ATAKToolbar
                 position="left"
                 selectedTool={selectedTool}
                 onToolSelect={(tool) => {
                     setSelectedTool(tool);
+                    
+                    // Clear temp marker when switching tools
+                    if (tempMarker && mapRef.current) {
+                        mapRef.current.removeLayer(tempMarker);
+                        setTempMarker(null);
+                    }
+                    
+                    // Reset all modes first
+                    setMeasureMode(false);
+                    setDrawMode('none');
+                    setLinePoints([]);
+                    setPolygonPoints([]);
+                    
                     // Handle tool selection logic
                     if (tool === 'measure') {
                         setMeasureMode(true);
-                        setDrawMode('none');
-                    } else if (['marker', 'circle', 'line', 'polygon', 'rectangle'].includes(tool)) {
-                        setDrawMode(tool as any);
-                        setMeasureMode(false);
+                        setMeasurePoints([]);
+                        notifications.show({
+                            title: 'Measure Mode Active',
+                            message: 'Click points on map. Right-click to finish.',
+                            color: 'tacticalCyan',
+                            autoClose: 3000,
+                        });
+                    } else if (tool === 'marker') {
+                        setDrawMode('marker');
+                        notifications.show({
+                            title: 'Self Marker Mode',
+                            message: 'Click map to place your position marker',
+                            color: 'tacticalCyan',
+                            autoClose: 3000,
+                        });
+                    } else if (tool === 'hostile') {
+                        setDrawMode('hostile');
+                        notifications.show({
+                            title: 'Hostile Marker Mode',
+                            message: 'Click map to mark hostile contact',
+                            color: 'tacticalRed',
+                            autoClose: 3000,
+                        });
+                    } else if (tool === 'friendly') {
+                        setDrawMode('friendly');
+                        notifications.show({
+                            title: 'Friendly Marker Mode',
+                            message: 'Click map to mark friendly unit',
+                            color: 'tacticalGreen',
+                            autoClose: 3000,
+                        });
+                    } else if (tool === 'waypoint') {
+                        setDrawMode('waypoint');
+                        notifications.show({
+                            title: 'Waypoint Mode',
+                            message: 'Click map to place navigation waypoint',
+                            color: 'tacticalBlue',
+                            autoClose: 3000,
+                        });
+                    } else if (tool === 'alert') {
+                        setDrawMode('alert');
+                        notifications.show({
+                            title: 'Alert Mode',
+                            message: 'Click map to place alert marker',
+                            color: 'tacticalOrange',
+                            autoClose: 3000,
+                        });
+                    } else if (tool === 'casevac') {
+                        setDrawMode('casevac');
+                        notifications.show({
+                            title: 'CASEVAC Mode',
+                            message: 'Click map to request medical evacuation',
+                            color: 'tacticalRed',
+                            autoClose: 3000,
+                        });
+                    } else if (tool === 'circle') {
+                        setDrawMode('circle');
+                        notifications.show({
+                            title: 'Circle Mode',
+                            message: 'Click map to draw circle (1km radius)',
+                            color: 'tacticalCyan',
+                            autoClose: 3000,
+                        });
+                    } else if (tool === 'line') {
+                        setDrawMode('line');
+                        notifications.show({
+                            title: 'Line Mode',
+                            message: 'Click points. Right-click to finish.',
+                            color: 'tacticalOrange',
+                            autoClose: 3000,
+                        });
+                    } else if (tool === 'polygon') {
+                        setDrawMode('polygon');
+                        notifications.show({
+                            title: 'Polygon Mode',
+                            message: 'Click vertices (min 3). Right-click to complete.',
+                            color: 'tacticalGreen',
+                            autoClose: 3000,
+                        });
+                    } else if (tool === 'rectangle') {
+                        setDrawMode('rectangle');
+                        notifications.show({
+                            title: 'Rectangle Mode',
+                            message: 'Click two opposite corners',
+                            color: 'tacticalBlue',
+                            autoClose: 3000,
+                        });
                     } else if (tool === 'send-cot') {
                         setShowMissionPanel(!showMissionPanel);
                     }
@@ -684,11 +1238,16 @@ export default function Map() {
                     drawLayerRef.current.clearLayers();
                     setMeasurePoints([]);
                     setLinePoints([]);
+                    setPolygonPoints([]);
                     measureLineRef.current = null;
                     drawLineRef.current = null;
                     setMeasureMode(false);
                     setDrawMode('none');
                     setSelectedTool('none');
+                    if (tempMarker && mapRef.current) {
+                        mapRef.current.removeLayer(tempMarker);
+                        setTempMarker(null);
+                    }
                     if (mapRef.current) {
                         mapRef.current.closePopup();
                     }
