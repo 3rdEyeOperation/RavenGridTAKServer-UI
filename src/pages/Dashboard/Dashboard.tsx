@@ -111,85 +111,74 @@ export default function Dashboard() {
                 <Title mb="xl" order={2}>{t('Situation Awareness Dashboard')}</Title>
             </Center>
 
-            {/* Service Status Overview */}
+            {/* Active EUDs Overview */}
             <Center mb="xl">
                 <Paper shadow="xl" withBorder radius="md" p="xl" style={{ width: '90%' }}>
-                    <Title order={3} mb="md">{t('Service Status')}</Title>
+                    <Title order={3} mb="md">{t('Network Status')}</Title>
                     <Grid>
-                        <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-                            <Paper withBorder p="md" radius="md">
-                                <Group>
+                        <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
+                            <Paper withBorder p="xl" radius="md" style={{ backgroundColor: alerts.online_euds > 0 ? 'rgba(64, 192, 87, 0.1)' : 'inherit' }}>
+                                <Group justify="center">
                                     <ThemeIcon 
-                                        size="xl" 
-                                        radius="md" 
-                                        color={alerts.cot_router ? 'green' : 'red'}
-                                    >
-                                        {alerts.cot_router ? <IconCircleCheck size={28} /> : <IconX size={28} />}
-                                    </ThemeIcon>
-                                    <div>
-                                        <Text size="xs" color="dimmed">{t('CoT Router')}</Text>
-                                        <Text size="lg" fw={700}>
-                                            {alerts.cot_router ? t('Online') : t('Offline')}
-                                        </Text>
-                                    </div>
-                                </Group>
-                            </Paper>
-                        </Grid.Col>
-                        <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-                            <Paper withBorder p="md" radius="md">
-                                <Group>
-                                    <ThemeIcon 
-                                        size="xl" 
-                                        radius="md" 
-                                        color={alerts.tcp ? 'green' : 'red'}
-                                    >
-                                        {alerts.tcp ? <IconCircleCheck size={28} /> : <IconX size={28} />}
-                                    </ThemeIcon>
-                                    <div>
-                                        <Text size="xs" color="dimmed">{t('TCP Service')}</Text>
-                                        <Text size="lg" fw={700}>
-                                            {alerts.tcp ? t('Running') : t('Stopped')}
-                                        </Text>
-                                    </div>
-                                </Group>
-                            </Paper>
-                        </Grid.Col>
-                        <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-                            <Paper withBorder p="md" radius="md">
-                                <Group>
-                                    <ThemeIcon 
-                                        size="xl" 
-                                        radius="md" 
-                                        color={alerts.ssl ? 'green' : 'red'}
-                                    >
-                                        {alerts.ssl ? <IconCircleCheck size={28} /> : <IconX size={28} />}
-                                    </ThemeIcon>
-                                    <div>
-                                        <Text size="xs" color="dimmed">{t('SSL Service')}</Text>
-                                        <Text size="lg" fw={700}>
-                                            {alerts.ssl ? t('Running') : t('Stopped')}
-                                        </Text>
-                                    </div>
-                                </Group>
-                            </Paper>
-                        </Grid.Col>
-                        <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-                            <Paper withBorder p="md" radius="md" style={{ backgroundColor: alerts.online_euds > 0 ? 'rgba(64, 192, 87, 0.1)' : 'inherit' }}>
-                                <Group>
-                                    <ThemeIcon 
-                                        size="xl" 
+                                        size={60}
                                         radius="md" 
                                         color={alerts.online_euds > 0 ? 'green' : 'gray'}
                                     >
-                                        <IconUsers size={28} />
+                                        <IconUsers size={40} />
                                     </ThemeIcon>
+                                </Group>
+                                <Center mt="md">
                                     <div>
-                                        <Text size="xs" color="dimmed">{t('Online EUDs')}</Text>
-                                        <Text size="xl" fw={700} color={alerts.online_euds > 0 ? 'green' : 'dimmed'}>
+                                        <Text size="xs" c="dimmed" ta="center">{t('Online EUDs')}</Text>
+                                        <Text size={48} fw={700} ta="center" c={alerts.online_euds > 0 ? 'green' : 'dimmed'}>
                                             {alerts.online_euds}
                                         </Text>
                                     </div>
+                                </Center>
+                            </Paper>
+                        </Grid.Col>
+                        <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
+                            <Paper withBorder p="xl" radius="md">
+                                <Group justify="center">
+                                    <ThemeIcon 
+                                        size={60}
+                                        radius="md" 
+                                        color="blue"
+                                    >
+                                        <IconServer size={40} />
+                                    </ThemeIcon>
                                 </Group>
+                                <Center mt="md">
+                                    <div>
+                                        <Text size="xs" c="dimmed" ta="center">{t('Server Status')}</Text>
+                                        <Text size="lg" fw={700} ta="center" c="green">
+                                            {t('Running')}
+                                        </Text>
+                                        <Text size="xs" c="dimmed" ta="center">{formatDuration(intervalToDuration({ start: 0, end: ots.uptime * 1000 }))}</Text>
+                                    </div>
+                                </Center>
+                            </Paper>
+                        </Grid.Col>
+                        <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
+                            <Paper withBorder p="xl" radius="md">
+                                <Group justify="center">
+                                    <ThemeIcon 
+                                        size={60}
+                                        radius="md" 
+                                        color="teal"
+                                    >
+                                        <IconRouter size={40} />
+                                    </ThemeIcon>
+                                </Group>
+                                <Center mt="md">
+                                    <div>
+                                        <Text size="xs" c="dimmed" ta="center">{t('System Status')}</Text>
+                                        <Text size="lg" fw={700} ta="center" c="green">
+                                            {t('Online')}
+                                        </Text>
+                                        <Text size="xs" c="dimmed" ta="center">{formatDuration(intervalToDuration({ start: 0, end: uptime.uptime * 1000 }))}</Text>
+                                    </div>
+                                </Center>
                             </Paper>
                         </Grid.Col>
                     </Grid>
