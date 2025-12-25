@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { notifications } from '@mantine/notifications';
-import {Text, Center, Title, Divider, Paper, Flex, Switch, Space, ScrollArea, Badge, Grid, Group, RingProgress, ThemeIcon} from '@mantine/core';
-import { IconCheck, IconX, IconAlertTriangle, IconCircleCheck, IconUsers, IconServer, IconRouter } from '@tabler/icons-react';
+import {Text, Center, Title, Divider, Paper, Flex, Switch, Space, ScrollArea, Badge, Grid, Group, RingProgress, ThemeIcon, ActionIcon, Tooltip, NumberInput} from '@mantine/core';
+import { IconCheck, IconX, IconAlertTriangle, IconCircleCheck, IconUsers, IconServer, IconRouter, IconRefresh } from '@tabler/icons-react';
 import { DonutChart } from '@mantine/charts';
 import { parseISO, intervalToDuration, formatDuration } from 'date-fns';
 import { versions } from '../../_versions';
@@ -14,6 +14,10 @@ import {t} from "i18next";
 export default function Dashboard() {
     const [tcpEnabled, setTcpEnabled] = useState(true);
     const [sslEnabled, setSslEnabled] = useState(true);
+    const [autoRefresh, setAutoRefresh] = useState(true);
+    const [refreshInterval, setRefreshInterval] = useState(5);
+    const [isRefreshing, setIsRefreshing] = useState(false);
+    const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
     const [uname, setUname] = useState({
         machine: '',
         node: '',
@@ -60,55 +64,150 @@ export default function Dashboard() {
         uptime: 0,
     });
 
-    useEffect(() => {
-            axios.get(
-                apiRoutes.status
-            ).then(r => {
-                if (r.status === 200) {
-                    setAlerts({
-                        cot_router: r.data.cot_router,
-                        tcp: r.data.tcp,
-                        ssl: r.data.ssl,
-                        online_euds: r.data.online_euds,
-                    });
-                    setServerStatus({ cpu_percent: r.data.cpu_percent });
-                    setDisk({
-                        free: r.data.disk_usage.free,
-                        used: r.data.disk_usage.used,
-                        total: r.data.disk_usage.total,
-                        percent: r.data.disk_usage.percent,
-                    });
-                    setMemory({
-                        available: r.data.memory.available,
-                        free: r.data.memory.free,
-                        used: r.data.memory.used,
-                        total: r.data.memory.total,
-                        percent: r.data.memory.percent,
-                    });
-                    setOts({
-                        version: r.data.ots_version,
-                        uptime: r.data.ots_uptime,
-                        start_time: parseISO(r.data.ots_start_time).toLocaleString(),
-                        python_version: r.data.python_version,
-                    });
-                    setUptime({
-                        uptime: r.data.system_uptime,
-                        boot_time: r.data.system_boot_time,
-                    });
-                    setTcpEnabled(r.data.tcp);
-                    setSslEnabled(r.data.ssl);
-                    setUname(r.data.uname);
-                    setOsRelease(r.data.os_release);
-                }
-            }).catch(err => {
-                console.log(err);
+    const fetchDashboardData = useCallback(() => {
+        setIsRefreshing(true);
+        axios.get(
+            apiRoutes.status
+        ).then(r => {
+            if (r.status === 200) {
+                setAlerts({
+                    cot_router: r.data.cot_router,
+                    tcp: r.data.tcp,
+                    ssl: r.data.ssl,
+                    online_euds: r.data.online_euds,
+                });
+                setServerStatus({ cpu_percent: r.data.cpu_percent });
+                setDisk({
+                    free: r.data.disk_usage.free,
+                    used: r.data.disk_usage.used,
+                    total: r.data.disk_usage.total,
+                    percent: r.data.disk_usage.percent,
+                });
+                setMemory({
+                    available: r.data.memory.available,
+                    free: r.data.memory.free,
+                    used: r.data.memory.used,
+                    total: r.data.memory.total,
+                    percent: r.data.memory.percent,
+                });
+                setOts({
+                    version: r.data.ots_version,
+                    uptime: r.data.ots_uptime,
+                    start_time: parseISO(r.data.ots_start_time).toLocaleString(),
+                    python_version: r.data.python_version,
+                });
+                setUptime({
+                    uptime: r.data.system_uptime,
+                    boot_time: r.data.system_boot_time,
+                });
+                setTcpEnabled(r.data.tcp);
+                setSslEnabled(r.data.ssl);
+                setUname(r.data.uname);
+                setOsRelease(r.data.os_release);
+                setLastUpdate(new Date());
+            }
+        }).catch(err => {
+            console.log(err);
+            notifications.show({
+                title: t('Error'),
+                message: t('Failed to fetch dashboard data'),
+                color: 'red',
+                icon: <IconX />,
             });
+        }).finally(() => {
+            setIsRefreshing(false);
+        });
     }, []);
+
+    useEffect(() => {
+        fetchDashboardData();
+    }, [fetchDashboardData]);
+
+    useEffect(() => {
+        if (autoRefresh && refreshInterval > 0) {
+            const interval = setInterval(() => {
+                fetchDashboardData();
+            }, refreshInterval * 1000);
+            
+            return () => clearInterval(interval);
+        }
+    }, [autoRefresh, refreshInterval, fetchDashboardData]);
 
     return (
         <ScrollArea>
             <Center>
                 <Title mb="xl" order={2} style={{ color: '#64ffda', textTransform: 'uppercase', letterSpacing: '2px', fontWeight: 700 }}>{t('Situation Awareness Dashboard')}</Title>
+            </Center>
+
+            {/* Dashboard Controls */}
+            <Center mb="md">
+                <Paper shadow="md" withBorder radius="md" p="md" style={{ 
+                    width: '90%', 
+                    backgroundColor: 'rgba(10, 14, 20, 0.8)',
+                    border: '1px solid rgba(100, 255, 218, 0.3)',
+                    backdropFilter: 'blur(10px)'
+                }}>
+                    <Group justify="space-between" align="center">
+                        <Group>
+                            <Tooltip label={t('Manual Refresh')}>
+                                <ActionIcon 
+                                    size="lg"
+                                    variant="light"
+                                    color="tacticalCyan"
+                                    onClick={() => fetchDashboardData()}
+                                    loading={isRefreshing}
+                                    style={{
+                                        backgroundColor: 'rgba(100, 255, 218, 0.1)',
+                                        border: '1px solid rgba(100, 255, 218, 0.3)'
+                                    }}
+                                >
+                                    <IconRefresh size={18} />
+                                </ActionIcon>
+                            </Tooltip>
+                            <div>
+                                <Text size="xs" c="dimmed" style={{ color: '#8892a0' }}>{t('Last Updated')}</Text>
+                                <Text size="sm" fw={600} style={{ color: '#64ffda', fontFamily: '"JetBrains Mono", monospace' }}>
+                                    {lastUpdate.toLocaleTimeString()}
+                                </Text>
+                            </div>
+                        </Group>
+                        
+                        <Group>
+                            <Switch
+                                label={t('Auto Refresh')}
+                                checked={autoRefresh}
+                                onChange={(e) => setAutoRefresh(e.currentTarget.checked)}
+                                color="tacticalCyan"
+                                styles={{
+                                    label: { color: '#e8eaed' }
+                                }}
+                            />
+                            {autoRefresh && (
+                                <Group gap="xs" align="center">
+                                    <Text size="sm" style={{ color: '#8892a0' }}>{t('Interval')}:</Text>
+                                    <NumberInput
+                                        value={refreshInterval}
+                                        onChange={(val) => setRefreshInterval(Number(val) || 5)}
+                                        min={1}
+                                        max={60}
+                                        step={1}
+                                        suffix="s"
+                                        w={80}
+                                        size="xs"
+                                        styles={{
+                                            input: {
+                                                backgroundColor: 'rgba(15, 23, 42, 0.7)',
+                                                border: '1px solid rgba(100, 255, 218, 0.3)',
+                                                color: '#e8eaed',
+                                                fontFamily: '"JetBrains Mono", monospace'
+                                            }
+                                        }}
+                                    />
+                                </Group>
+                            )}
+                        </Group>
+                    </Group>
+                </Paper>
             </Center>
 
             {/* Active EUDs Overview */}
