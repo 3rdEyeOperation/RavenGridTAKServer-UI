@@ -13,6 +13,9 @@ export function C2Dashboard({ contacts, onClose }: C2DashboardProps) {
     const [hostileForces, setHostileForces] = useState(0);
     const [unknownForces, setUnknownForces] = useState(0);
     const [readinessLevel, setReadinessLevel] = useState(85);
+    const [position, setPosition] = useState({ x: 70, y: 88 });
+    const [isDragging, setIsDragging] = useState(false);
+    const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
     useEffect(() => {
         // Simulate force categorization
@@ -21,15 +24,51 @@ export function C2Dashboard({ contacts, onClose }: C2DashboardProps) {
         setUnknownForces(Math.floor(contacts * 0.1));
     }, [contacts]);
 
+    useEffect(() => {
+        const handleMouseMove = (e: MouseEvent) => {
+            if (isDragging) {
+                setPosition({
+                    x: e.clientX - dragOffset.x,
+                    y: e.clientY - dragOffset.y,
+                });
+            }
+        };
+
+        const handleMouseUp = () => {
+            setIsDragging(false);
+        };
+
+        if (isDragging) {
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', handleMouseUp);
+        }
+
+        return () => {
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+        };
+    }, [isDragging, dragOffset]);
+
+    const handleMouseDown = (e: React.MouseEvent) => {
+        setIsDragging(true);
+        setDragOffset({
+            x: e.clientX - position.x,
+            y: e.clientY - position.y,
+        });
+    };
+
     return (
         <Paper
             shadow="xl"
             className="tactical-card"
+            onMouseDown={handleMouseDown}
             style={{
                 position: 'fixed',
-                top: '5.5rem',
-                left: '70px',
-                zIndex: 999,
+                top: `${position.y}px`,
+                left: `${position.x}px`,
+                zIndex: isDragging ? 10000 : 999,
+                cursor: isDragging ? 'grabbing' : 'grab',
+                userSelect: 'none',
                 backgroundColor: 'rgba(10, 14, 20, 0.95)',
                 border: '1px solid rgba(100, 255, 218, 0.4)',
                 backdropFilter: 'blur(10px)',

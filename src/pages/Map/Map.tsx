@@ -367,8 +367,23 @@ export default function Map() {
                             <strong style="color: #00e38a;">SELF MARKER</strong><br>
                             <strong>Lat:</strong> ${e.latlng.lat.toFixed(6)}<br>
                             <strong>Lon:</strong> ${e.latlng.lng.toFixed(6)}<br>
-                            <button onclick="this.closest('.leaflet-popup').remove()" style="margin-top: 4px; background: #ff4747; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;">Delete</button>
-                        </div>`);
+                            <button id="delete-${Date.now()}" style="margin-top: 4px; background: #ff4747; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;">Delete</button>
+                        </div>`)
+                        .on('add', function() {
+                            const deleteBtn = document.querySelector(`[id^="delete-"]`);
+                            if (deleteBtn) {
+                                deleteBtn.addEventListener('click', () => {
+                                    drawLayerRef.current.removeLayer(marker);
+                                    map.closePopup();
+                                    notifications.show({
+                                        title: 'Marker Deleted',
+                                        message: 'Marker removed from map',
+                                        color: 'tacticalRed',
+                                        autoClose: 2000,
+                                    });
+                                });
+                            }
+                        });
                     
                     marker.bindPopup(popup).openPopup();
                     drawLayerRef.current.addLayer(marker);
