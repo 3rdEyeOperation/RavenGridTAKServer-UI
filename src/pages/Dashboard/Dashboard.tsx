@@ -140,7 +140,7 @@ export default function Dashboard() {
                                 <Center mt="md">
                                     <div>
                                         <Text size="xs" c="dimmed" ta="center" style={{ color: '#8892a0', textTransform: 'uppercase', letterSpacing: '1px' }}>{t('Online EUDs')}</Text>
-                                        <Text size={48} fw={700} ta="center" style={{ 
+                                        <Text size="48px" fw={700} ta="center" style={{ 
                                             color: alerts.online_euds > 0 ? '#64ffda' : '#4a5568',
                                             fontFamily: '"JetBrains Mono", monospace'
                                         }}>

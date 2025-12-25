@@ -6,7 +6,7 @@ import {
     TextInput,
     useComputedColorScheme,
     Button,
-    Pagination, Center, Switch, FileInput,
+    Pagination, Center, Switch, FileInput, Paper,
 } from '@mantine/core';
 import React, { useEffect, useState } from 'react';
 import { IconCircleMinus, IconUpload, IconX } from '@tabler/icons-react';
