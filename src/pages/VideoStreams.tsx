@@ -236,7 +236,14 @@ export default function VideoStreams() {
     }
 
     return (
-        <>
+        <Paper
+            p="xl"
+            style={{
+                backgroundColor: 'rgba(15, 23, 42, 0.7)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(100, 255, 218, 0.2)',
+            }}
+        >
             <LoadingOverlay visible={loading} zIndex={1000} overlayProps={{ radius: "sm", blur: 2, fixed: true }} />
 
             <Button onClick={() => { setAddVideoOpened(true); }} mb="md" mr="md" leftSection={<IconPlus size={14} />}>Add Video</Button>
@@ -249,10 +256,35 @@ export default function VideoStreams() {
                 <Button onClick={() => { startStreaming(); }} mb="md" leftSection={<IconVideo size={14} />}>Start Streaming</Button>
             </Tooltip>
             <Table.ScrollContainer minWidth="100%">
-                <Table stripedColor={computedColorScheme === 'light' ? 'gray.2' : 'dark.8'} highlightOnHoverColor={computedColorScheme === 'light' ? 'gray.4' : 'dark.6'} striped="odd" data={videoStreams} highlightOnHover withTableBorder mb="md" />
+                <Table 
+                    stripedColor="rgba(100, 255, 218, 0.05)" 
+                    highlightOnHoverColor="rgba(100, 255, 218, 0.1)" 
+                    striped="odd" 
+                    data={videoStreams} 
+                    highlightOnHover 
+                    withTableBorder 
+                    mb="md"
+                    style={{
+                        border: '1px solid rgba(100, 255, 218, 0.2)',
+                    }}
+                />
             </Table.ScrollContainer>
             <Center><Pagination total={totalPages} value={activePage} onChange={setPage} withEdges /></Center>
-            <Modal opened={addVideoOpened} onClose={() => setAddVideoOpened(false)} title={t("Add Video")}>
+            <Modal 
+                opened={addVideoOpened} 
+                onClose={() => setAddVideoOpened(false)} 
+                title={t("Add Video")}
+                styles={{
+                    content: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                        border: '1px solid rgba(100, 255, 218, 0.3)',
+                    },
+                    header: {
+                        backgroundColor: 'rgba(10, 14, 20, 0.95)',
+                        borderBottom: '1px solid rgba(100, 255, 218, 0.3)',
+                    },
+                }}
+            >
                 <TextInput required label={t("Path")} onChange={e => { setPath(e.target.value); }} />
                 <TextInput label={t("Source")} onChange={e => { setSource(e.target.value); }} mb="md" />
                 <Button onClick={(e) => { addVideo(e); }}>{t("Add Video Stream")}</Button>

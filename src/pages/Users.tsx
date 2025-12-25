@@ -354,16 +354,57 @@ export default function Users() {
     }
 
     return (
-        <>
+        <Paper
+            p="xl"
+            style={{
+                backgroundColor: 'rgba(15, 23, 42, 0.7)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(100, 255, 218, 0.2)',
+            }}
+        >
             <LoadingOverlay visible={loading} zIndex={1000} overlayProps={{ radius: "sm", blur: 2 }} />
 
             <Button onClick={() => { setAddUserOpen(true); }} mb="md" leftSection={<IconUserPlus size={14} />}>Add User</Button>
             <Table.ScrollContainer minWidth="100%">
-                <Table data={users} stripedColor={computedColorScheme === 'light' ? 'gray.2' : 'dark.8'} highlightOnHoverColor={computedColorScheme === 'light' ? 'gray.4' : 'dark.6'} striped="odd" highlightOnHover withTableBorder mb="md" />
+                <Table 
+                    data={users} 
+                    stripedColor="rgba(100, 255, 218, 0.05)" 
+                    highlightOnHoverColor="rgba(100, 255, 218, 0.1)" 
+                    striped="odd" 
+                    highlightOnHover 
+                    withTableBorder 
+                    mb="md"
+                    style={{
+                        border: '1px solid rgba(100, 255, 218, 0.2)',
+                    }}
+                />
             </Table.ScrollContainer>
             <Center><Pagination total={totalPages} value={activePage} onChange={setPage} withEdges /></Center>
-            <Modal size="lg" opened={showManageGroups} onClose={() => setShowManageGroups(false)} title={`Manage Groups for ${username}`}>
-                <Paper withBorder p="md" mb="md">
+            <Modal 
+                size="lg" 
+                opened={showManageGroups} 
+                onClose={() => setShowManageGroups(false)} 
+                title={`Manage Groups for ${username}`}
+                styles={{
+                    content: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                        border: '1px solid rgba(100, 255, 218, 0.3)',
+                    },
+                    header: {
+                        backgroundColor: 'rgba(10, 14, 20, 0.95)',
+                        borderBottom: '1px solid rgba(100, 255, 218, 0.3)',
+                    },
+                }}
+            >
+                <Paper 
+                    withBorder 
+                    p="md" 
+                    mb="md"
+                    style={{
+                        backgroundColor: 'rgba(10, 14, 20, 0.5)',
+                        border: '1px solid rgba(100, 255, 218, 0.2)',
+                    }}
+                >
                     <Grid align="flex-end" justify="space-between">
                         <Grid.Col span={10}>
                             <Title order={6} mb="md">Direction: IN</Title>
@@ -381,7 +422,15 @@ export default function Users() {
                         </Grid.Col>
                     </Grid>
                 </Paper>
-                <Paper withBorder p="md" mb="md">
+                <Paper 
+                    withBorder 
+                    p="md" 
+                    mb="md"
+                    style={{
+                        backgroundColor: 'rgba(10, 14, 20, 0.5)',
+                        border: '1px solid rgba(100, 255, 218, 0.2)',
+                    }}
+                >
                     <Grid align="flex-end" justify="space-between">
                         <Grid.Col span={10}>
                             <Title order={6} mb="md">{t("Direction")}: OUT</Title>
@@ -399,12 +448,38 @@ export default function Users() {
                         </Grid.Col>
                     </Grid>
                 </Paper>
-                <Title order={4} mb="md">{t("Memberships")}</Title>
+                <Title order={4} mb="md" style={{ color: '#64ffda', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{t("Memberships")}</Title>
                 <Table.ScrollContainer minWidth="100%">
-                    <Table data={memberships} stripedColor={computedColorScheme === 'light' ? 'gray.2' : 'dark.8'} highlightOnHoverColor={computedColorScheme === 'light' ? 'gray.4' : 'dark.6'} striped="odd" highlightOnHover withTableBorder mt="md" mb="md" />
+                    <Table 
+                        data={memberships} 
+                        stripedColor="rgba(100, 255, 218, 0.05)" 
+                        highlightOnHoverColor="rgba(100, 255, 218, 0.1)" 
+                        striped="odd" 
+                        highlightOnHover 
+                        withTableBorder 
+                        mt="md" 
+                        mb="md"
+                        style={{
+                            border: '1px solid rgba(100, 255, 218, 0.2)',
+                        }}
+                    />
                 </Table.ScrollContainer>
             </Modal>
-            <Modal opened={addUserOpen} onClose={() => setAddUserOpen(false)} title={t("Add User")}>
+            <Modal 
+                opened={addUserOpen} 
+                onClose={() => setAddUserOpen(false)} 
+                title={t("Add User")}
+                styles={{
+                    content: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                        border: '1px solid rgba(100, 255, 218, 0.3)',
+                    },
+                    header: {
+                        backgroundColor: 'rgba(10, 14, 20, 0.95)',
+                        borderBottom: '1px solid rgba(100, 255, 218, 0.3)',
+                    },
+                }}
+            >
                 <TextInput required label="Username" placeholder="Username" onChange={e => { setUsername(e.target.value); }} />
                 <PasswordInput
                   label="Password"
@@ -433,7 +508,21 @@ export default function Users() {
                 />
                 <Button onClick={(e) => { addUser(e); }}>Add User</Button>
             </Modal>
-            <Modal opened={showResetPassword} onClose={() => setShowResetPassword(false)} title={`Reset ${username}'s Password`}>
+            <Modal 
+                opened={showResetPassword} 
+                onClose={() => setShowResetPassword(false)} 
+                title={`Reset ${username}'s Password`}
+                styles={{
+                    content: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                        border: '1px solid rgba(100, 255, 218, 0.3)',
+                    },
+                    header: {
+                        backgroundColor: 'rgba(10, 14, 20, 0.95)',
+                        borderBottom: '1px solid rgba(100, 255, 218, 0.3)',
+                    },
+                }}
+            >
                 <PasswordInput
                   label="Password"
                   placeholder="Password"
@@ -445,7 +534,21 @@ export default function Users() {
                 />
                 <Button onClick={(e) => { resetPassword(e); }}>Change Password</Button>
             </Modal>
-            <Modal opened={showDeleteUser} onClose={() => setShowDeleteUser(false)} title={`Are you sure you want to delete ${username}?`}>
+            <Modal 
+                opened={showDeleteUser} 
+                onClose={() => setShowDeleteUser(false)} 
+                title={`Are you sure you want to delete ${username}?`}
+                styles={{
+                    content: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                        border: '1px solid rgba(100, 255, 218, 0.3)',
+                    },
+                    header: {
+                        backgroundColor: 'rgba(10, 14, 20, 0.95)',
+                        borderBottom: '1px solid rgba(100, 255, 218, 0.3)',
+                    },
+                }}
+            >
                 <Center>
                     <Button
                       mr="md"
@@ -458,6 +561,6 @@ export default function Users() {
                     <Button onClick={() => setShowDeleteUser(false)}>No</Button>
                 </Center>
             </Modal>
-        </>
+        </Paper>
     );
 }

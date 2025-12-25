@@ -33,8 +33,20 @@ export default function EUDStats() {
 
     return (
         <>
-            <Title order={1}>{searchParams.get("callsign")}</Title>
-            <Paper withBorder shadow="xl" radius="md" p="xl" mr="md" mb="md">
+            <Title order={1} style={{ color: '#64ffda', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{searchParams.get("callsign")}</Title>
+            <Paper 
+                withBorder 
+                shadow="xl" 
+                radius="md" 
+                p="xl" 
+                mr="md" 
+                mb="md"
+                style={{
+                    backgroundColor: 'rgba(15, 23, 42, 0.7)',
+                    backdropFilter: 'blur(10px)',
+                    border: '1px solid rgba(100, 255, 218, 0.2)',
+                }}
+            >
                 <LineChart
                     h={300}
                     data={data}
@@ -49,7 +61,19 @@ export default function EUDStats() {
                     curveType="linear"
                 />
             </Paper>
-            <Paper withBorder shadow="xl" radius="md" p="xl" mr="md" mb="md">
+            <Paper 
+                withBorder 
+                shadow="xl" 
+                radius="md" 
+                p="xl" 
+                mr="md" 
+                mb="md"
+                style={{
+                    backgroundColor: 'rgba(15, 23, 42, 0.7)',
+                    backdropFilter: 'blur(10px)',
+                    border: '1px solid rgba(100, 255, 218, 0.2)',
+                }}
+            >
                 <LineChart
                     h={300}
                     data={data}
@@ -63,7 +87,19 @@ export default function EUDStats() {
                     curveType="linear"
                 />
             </Paper>
-            <Paper withBorder shadow="xl" radius="md" p="xl" mr="md" mb="md">
+            <Paper 
+                withBorder 
+                shadow="xl" 
+                radius="md" 
+                p="xl" 
+                mr="md" 
+                mb="md"
+                style={{
+                    backgroundColor: 'rgba(15, 23, 42, 0.7)',
+                    backdropFilter: 'blur(10px)',
+                    border: '1px solid rgba(100, 255, 218, 0.2)',
+                }}
+            >
                 <LineChart
                     h={300}
                     data={data}
@@ -79,7 +115,19 @@ export default function EUDStats() {
                     curveType="linear"
                 />
             </Paper>
-            <Paper withBorder shadow="xl" radius="md" p="xl" mr="md" mb="md">
+            <Paper 
+                withBorder 
+                shadow="xl" 
+                radius="md" 
+                p="xl" 
+                mr="md" 
+                mb="md"
+                style={{
+                    backgroundColor: 'rgba(15, 23, 42, 0.7)',
+                    backdropFilter: 'blur(10px)',
+                    border: '1px solid rgba(100, 255, 218, 0.2)',
+                }}
+            >
                 <LineChart
                     h={300}
                     data={data}

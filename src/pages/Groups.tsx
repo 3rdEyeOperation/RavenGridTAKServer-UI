@@ -250,9 +250,30 @@ export default function Groups() {
     }, [activePage]);
 
     return (
-        <>
+        <Paper
+            p="xl"
+            style={{
+                backgroundColor: 'rgba(15, 23, 42, 0.7)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(100, 255, 218, 0.2)',
+            }}
+        >
             <Button onClick={() => setShowAddGroup(true)}>Add Group</Button>
-            <Modal opened={showAddGroup} onClose={() => setShowAddGroup(false)} title={t("Add Group")}>
+            <Modal 
+                opened={showAddGroup} 
+                onClose={() => setShowAddGroup(false)} 
+                title={t("Add Group")}
+                styles={{
+                    content: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                        border: '1px solid rgba(100, 255, 218, 0.3)',
+                    },
+                    header: {
+                        backgroundColor: 'rgba(10, 14, 20, 0.95)',
+                        borderBottom: '1px solid rgba(100, 255, 218, 0.3)',
+                    },
+                }}
+            >
                 <TextInput required label={t("Name")} onChange={e => { newGroupProperties.name = e.target.value; }} mb="md" />
                 <TextInput required label={t("Description")} onChange={e => { newGroupProperties.description = e.target.value; }} mb="md" />
                 <Button
@@ -263,8 +284,31 @@ export default function Groups() {
                 >Add Group
                 </Button>
             </Modal>
-            <Modal size="xl" opened={showAddUserToGroup} onClose={() => setShowAddUserToGroup(false)} title={`Manage ${group} Members`}>
-                <Paper withBorder p="md" mb="md">
+            <Modal 
+                size="xl" 
+                opened={showAddUserToGroup} 
+                onClose={() => setShowAddUserToGroup(false)} 
+                title={`Manage ${group} Members`}
+                styles={{
+                    content: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                        border: '1px solid rgba(100, 255, 218, 0.3)',
+                    },
+                    header: {
+                        backgroundColor: 'rgba(10, 14, 20, 0.95)',
+                        borderBottom: '1px solid rgba(100, 255, 218, 0.3)',
+                    },
+                }}
+            >
+                <Paper 
+                    withBorder 
+                    p="md" 
+                    mb="md"
+                    style={{
+                        backgroundColor: 'rgba(10, 14, 20, 0.5)',
+                        border: '1px solid rgba(100, 255, 218, 0.2)',
+                    }}
+                >
                     <Grid align="flex-end" justify="space-between">
                         <Grid.Col span={10}>
                             <Title order={6} mb="md">Direction: IN</Title>
@@ -282,7 +326,16 @@ export default function Groups() {
                         </Grid.Col>
                     </Grid>
                 </Paper>
-                <Paper withBorder title={t("Direction: OUT")} mb="md" p="md">
+                <Paper 
+                    withBorder 
+                    title={t("Direction: OUT")} 
+                    mb="md" 
+                    p="md"
+                    style={{
+                        backgroundColor: 'rgba(10, 14, 20, 0.5)',
+                        border: '1px solid rgba(100, 255, 218, 0.2)',
+                    }}
+                >
                     <Grid align="flex-end" justify="space-between">
                         <Grid.Col span={10}>
                             <Title order={6} mb="md">Direction: OUT</Title>
@@ -299,12 +352,38 @@ export default function Groups() {
                         </Grid.Col>
                     </Grid>
                 </Paper>
-                <Title order={4} mb="md">{t("Members")}</Title>
+                <Title order={4} mb="md" style={{ color: '#64ffda', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{t("Members")}</Title>
                 <Table.ScrollContainer minWidth="100%">
-                    <Table data={members} stripedColor={computedColorScheme === 'light' ? 'gray.2' : 'dark.8'} highlightOnHoverColor={computedColorScheme === 'light' ? 'gray.4' : 'dark.6'} striped="odd" highlightOnHover withTableBorder mt="md" mb="md" />
+                    <Table 
+                        data={members} 
+                        stripedColor="rgba(100, 255, 218, 0.05)" 
+                        highlightOnHoverColor="rgba(100, 255, 218, 0.1)" 
+                        striped="odd" 
+                        highlightOnHover 
+                        withTableBorder 
+                        mt="md" 
+                        mb="md"
+                        style={{
+                            border: '1px solid rgba(100, 255, 218, 0.2)',
+                        }}
+                    />
                 </Table.ScrollContainer>
             </Modal>
-            <Modal opened={deleteGroupOpen} onClose={() => setDeleteGroupOpen(false)} title={`Delete Group ${groupToDelete}?`}>
+            <Modal 
+                opened={deleteGroupOpen} 
+                onClose={() => setDeleteGroupOpen(false)} 
+                title={`Delete Group ${groupToDelete}?`}
+                styles={{
+                    content: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                        border: '1px solid rgba(100, 255, 218, 0.3)',
+                    },
+                    header: {
+                        backgroundColor: 'rgba(10, 14, 20, 0.95)',
+                        borderBottom: '1px solid rgba(100, 255, 218, 0.3)',
+                    },
+                }}
+            >
                 <Center>
                     <Button
                         mr="md"
@@ -318,9 +397,21 @@ export default function Groups() {
                 </Center>
             </Modal>
             <Table.ScrollContainer minWidth="100%">
-                <Table data={groups} stripedColor={computedColorScheme === 'light' ? 'gray.2' : 'dark.8'} highlightOnHoverColor={computedColorScheme === 'light' ? 'gray.4' : 'dark.6'} striped="odd" highlightOnHover withTableBorder mt="md" mb="md" />
+                <Table 
+                    data={groups} 
+                    stripedColor="rgba(100, 255, 218, 0.05)" 
+                    highlightOnHoverColor="rgba(100, 255, 218, 0.1)" 
+                    striped="odd" 
+                    highlightOnHover 
+                    withTableBorder 
+                    mt="md" 
+                    mb="md"
+                    style={{
+                        border: '1px solid rgba(100, 255, 218, 0.2)',
+                    }}
+                />
             </Table.ScrollContainer>
             <Center><Pagination total={totalPages} value={activePage} onChange={setPage} withEdges /></Center>
-        </>
+        </Paper>
     )
 }

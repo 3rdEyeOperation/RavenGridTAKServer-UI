@@ -192,13 +192,45 @@ export default function DeviceProfiles() {
     />;
 
     return (
-        <>
+        <Paper
+            p="xl"
+            style={{
+                backgroundColor: 'rgba(15, 23, 42, 0.7)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(100, 255, 218, 0.2)',
+            }}
+        >
             <Button onClick={() => setAddProfile(true)} variant="filled" leftSection={<IconUpload size={14} />} mb="md">Add Device Profile</Button>
             <Table.ScrollContainer minWidth="100%">
-                <Table stripedColor={computedColorScheme === 'light' ? 'gray.2' : 'dark.8'} highlightOnHoverColor={computedColorScheme === 'light' ? 'gray.4' : 'dark.6'} striped="odd" data={profiles} highlightOnHover withTableBorder mb="md" />
+                <Table 
+                    stripedColor="rgba(100, 255, 218, 0.05)" 
+                    highlightOnHoverColor="rgba(100, 255, 218, 0.1)" 
+                    striped="odd" 
+                    data={profiles} 
+                    highlightOnHover 
+                    withTableBorder 
+                    mb="md"
+                    style={{
+                        border: '1px solid rgba(100, 255, 218, 0.2)',
+                    }}
+                />
             </Table.ScrollContainer>
             <Center><Pagination total={totalPages} value={activePage} onChange={setPage} withEdges /></Center>
-            <Modal opened={addProfile} onClose={() => setAddProfile(false)} title={t("Add Device Profile")}>
+            <Modal 
+                opened={addProfile} 
+                onClose={() => setAddProfile(false)} 
+                title={t("Add Device Profile")}
+                styles={{
+                    content: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                        border: '1px solid rgba(100, 255, 218, 0.3)',
+                    },
+                    header: {
+                        backgroundColor: 'rgba(10, 14, 20, 0.95)',
+                        borderBottom: '1px solid rgba(100, 255, 218, 0.3)',
+                    },
+                }}
+            >
                 <TextInput required label={t("Key")} onChange={e => { setNewProfile({ ...newProfile, key: e.currentTarget.value }); }} />
                 <TextInput required label={t("Value")} onChange={e => { setNewProfile({ ...newProfile, value: e.currentTarget.value }); }} />
                 {value_class}
@@ -207,10 +239,24 @@ export default function DeviceProfiles() {
                 <Switch label="Active" onChange={(e) => setNewProfile({ ...newProfile, active: e.target.checked })} mb="md" />
                 <Button onClick={(e) => { add_profile(e, newProfile); }}>Add Device Profile</Button>
             </Modal>
-            <Modal opened={deleteModalOpen} onClose={() => setDeleteModalOpen(false)} title={`Are you sure you want to delete ${deleteProfile}?`}>
+            <Modal 
+                opened={deleteModalOpen} 
+                onClose={() => setDeleteModalOpen(false)} 
+                title={`Are you sure you want to delete ${deleteProfile}?`}
+                styles={{
+                    content: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                        border: '1px solid rgba(100, 255, 218, 0.3)',
+                    },
+                    header: {
+                        backgroundColor: 'rgba(10, 14, 20, 0.95)',
+                        borderBottom: '1px solid rgba(100, 255, 218, 0.3)',
+                    },
+                }}
+            >
                 <Button onClick={() => delete_profile()} mr="md">Yes</Button>
                 <Button onClick={() => setDeleteModalOpen(false)}>No</Button>
             </Modal>
-        </>
+        </Paper>
     );
 }

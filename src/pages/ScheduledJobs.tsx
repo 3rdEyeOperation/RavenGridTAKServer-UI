@@ -1,4 +1,4 @@
-import { Button, NumberInput, Switch, Table, TableData, useComputedColorScheme } from '@mantine/core';
+import { Button, NumberInput, Switch, Table, TableData, useComputedColorScheme, Paper } from '@mantine/core';
 import React, { useEffect, useState } from 'react';
 import { IconCheck, IconDeviceFloppy, IconEdit, IconPlayerPlay, IconX } from '@tabler/icons-react';
 import { notifications } from '@mantine/notifications';
@@ -242,10 +242,28 @@ export default function ScheduledJobs() {
     }, [interval]);
 
     return (
-        <>
+        <Paper
+            p="xl"
+            style={{
+                backgroundColor: 'rgba(15, 23, 42, 0.7)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(100, 255, 218, 0.2)',
+            }}
+        >
             <Table.ScrollContainer minWidth="100%">
-                <Table data={jobs} stripedColor={computedColorScheme === 'light' ? 'gray.2' : 'dark.8'} highlightOnHoverColor={computedColorScheme === 'light' ? 'gray.4' : 'dark.6'} striped="odd" highlightOnHover withTableBorder mb="md" />
+                <Table 
+                    data={jobs} 
+                    stripedColor="rgba(100, 255, 218, 0.05)" 
+                    highlightOnHoverColor="rgba(100, 255, 218, 0.1)" 
+                    striped="odd" 
+                    highlightOnHover 
+                    withTableBorder 
+                    mb="md"
+                    style={{
+                        border: '1px solid rgba(100, 255, 218, 0.2)',
+                    }}
+                />
             </Table.ScrollContainer>
-        </>
+        </Paper>
     );
 }

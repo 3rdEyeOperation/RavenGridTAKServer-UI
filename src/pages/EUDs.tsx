@@ -3,7 +3,7 @@ import {
     TableData,
     Pagination,
     Center,
-    useComputedColorScheme, LoadingOverlay,
+    useComputedColorScheme, LoadingOverlay, Paper,
 } from '@mantine/core';
 import React, { useEffect, useState } from 'react';
 import { notifications } from '@mantine/notifications';
@@ -107,13 +107,31 @@ export default function EUDs() {
     }, [activePage]);
 
     return (
-        <>
+        <Paper
+            p="xl"
+            style={{
+                backgroundColor: 'rgba(15, 23, 42, 0.7)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(100, 255, 218, 0.2)',
+            }}
+        >
             <LoadingOverlay visible={loading} zIndex={1000} overlayProps={{ radius: "sm", blur: 2 }} />
 
             <Table.ScrollContainer minWidth="100%">
-                <Table data={euds} stripedColor={computedColorScheme === 'light' ? 'gray.2' : 'dark.8'} highlightOnHoverColor={computedColorScheme === 'light' ? 'gray.4' : 'dark.6'} striped="odd" highlightOnHover withTableBorder mb="md" />
+                <Table 
+                    data={euds} 
+                    stripedColor="rgba(100, 255, 218, 0.05)" 
+                    highlightOnHoverColor="rgba(100, 255, 218, 0.1)" 
+                    striped="odd" 
+                    highlightOnHover 
+                    withTableBorder 
+                    mb="md"
+                    style={{
+                        border: '1px solid rgba(100, 255, 218, 0.2)',
+                    }}
+                />
             </Table.ScrollContainer>
             <Center><Pagination total={totalPages} value={activePage} onChange={setPage} withEdges /></Center>
-        </>
+        </Paper>
     );
 }

@@ -236,12 +236,33 @@ export default function DataPackages() {
     }
 
     return (
-        <>
+        <Paper
+            p="xl"
+            style={{
+                backgroundColor: 'rgba(15, 23, 42, 0.7)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(100, 255, 218, 0.2)',
+            }}
+        >
             <FileButton onChange={setFile}>
                 {(props) => <Button mr="md" {...props}>Upload Data Package</Button>}
             </FileButton>
             <Button onClick={() => generateDataPackage()} loading={generatingDataPackage}>Generate Configuration Data Package</Button>
-            <Modal opened={deleteDataPackageOpen} onClose={() => setDeleteDataPackageOpen(false)} title={t("Are you sure you want to delete this data package?")}>
+            <Modal 
+                opened={deleteDataPackageOpen} 
+                onClose={() => setDeleteDataPackageOpen(false)} 
+                title={t("Are you sure you want to delete this data package?")}
+                styles={{
+                    content: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                        border: '1px solid rgba(100, 255, 218, 0.3)',
+                    },
+                    header: {
+                        backgroundColor: 'rgba(10, 14, 20, 0.95)',
+                        borderBottom: '1px solid rgba(100, 255, 218, 0.3)',
+                    },
+                }}
+            >
                 <Center>
                     <Button
                       mr="md"
@@ -254,7 +275,23 @@ export default function DataPackages() {
                     <Button onClick={() => setDeleteDataPackageOpen(false)}>No</Button>
                 </Center>
             </Modal>
-            <Modal title={qrTitle} opened={showQrCode} onClose={() => setShowQrCode(false)} p="md" pb="lg">
+            <Modal 
+                title={qrTitle} 
+                opened={showQrCode} 
+                onClose={() => setShowQrCode(false)} 
+                p="md" 
+                pb="lg"
+                styles={{
+                    content: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                        border: '1px solid rgba(100, 255, 218, 0.3)',
+                    },
+                    header: {
+                        backgroundColor: 'rgba(10, 14, 20, 0.95)',
+                        borderBottom: '1px solid rgba(100, 255, 218, 0.3)',
+                    },
+                }}
+            >
                 <Center>
                     <Paper p="md" shadow="xl" withBorder bg="white">
                         <QRCode value={qrLink} size={350} quietZone={10} logoImage={Logo} eyeRadius={50} ecLevel="L" qrStyle="dots" logoWidth={100} logoHeight={100} />
@@ -262,9 +299,21 @@ export default function DataPackages() {
                 </Center>
             </Modal>
             <Table.ScrollContainer minWidth="100%">
-                <Table data={dataPackages} stripedColor={computedColorScheme === 'light' ? 'gray.2' : 'dark.8'} highlightOnHoverColor={computedColorScheme === 'light' ? 'gray.4' : 'dark.6'} striped="odd" highlightOnHover withTableBorder mt="md" mb="md" />
+                <Table 
+                    data={dataPackages} 
+                    stripedColor="rgba(100, 255, 218, 0.05)" 
+                    highlightOnHoverColor="rgba(100, 255, 218, 0.1)" 
+                    striped="odd" 
+                    highlightOnHover 
+                    withTableBorder 
+                    mt="md" 
+                    mb="md"
+                    style={{
+                        border: '1px solid rgba(100, 255, 218, 0.2)',
+                    }}
+                />
             </Table.ScrollContainer>
             <Center><Pagination total={totalPages} value={activePage} onChange={setPage} withEdges /></Center>
-        </>
+        </Paper>
     );
 }

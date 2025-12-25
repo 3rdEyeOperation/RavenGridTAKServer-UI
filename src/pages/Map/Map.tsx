@@ -464,17 +464,40 @@ export default function Map() {
               title={drawerTitle}
               overlayProps={{ backgroundOpacity: 0 }}
               shadow="xl"
+              styles={{
+                content: {
+                    backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                    border: '1px solid rgba(100, 255, 218, 0.3)',
+                },
+                header: {
+                    backgroundColor: 'rgba(10, 14, 20, 0.95)',
+                    borderBottom: '1px solid rgba(100, 255, 218, 0.3)',
+                },
+                body: {
+                    backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                },
+              }}
             >
-                <Divider label="Details" labelPosition="left" color={computedColorScheme === 'light' ? 'black' : 'gray.4'} />
+                <Divider label="Details" labelPosition="left" color="rgba(100, 255, 218, 0.5)" />
                 <Table>
                     {detailRows}
                 </Table>
-                <Divider label="Position" labelPosition="left" color={computedColorScheme === 'light' ? 'black' : 'gray.4'} />
+                <Divider label="Position" labelPosition="left" color="rgba(100, 255, 218, 0.5)" />
                 <Table>
                     {positionRows}
                 </Table>
             </Drawer>
-            <Paper shadow="xl" radius="md" p="md" withBorder>
+            <Paper 
+                shadow="xl" 
+                radius="md" 
+                p="md" 
+                withBorder
+                style={{
+                    backgroundColor: 'rgba(15, 23, 42, 0.7)',
+                    backdropFilter: 'blur(10px)',
+                    border: '1px solid rgba(100, 255, 218, 0.2)',
+                }}
+            >
                 <MapContainer
                   center={[10, 0]}
                   zoom={3}
