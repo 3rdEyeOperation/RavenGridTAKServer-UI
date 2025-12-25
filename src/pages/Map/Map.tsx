@@ -22,7 +22,6 @@ import Arrow from './Arrow';
 import Video from './Video';
 import { ATAKToolbar } from './ATAKToolbar';
 import { CoordinateDisplay } from './CoordinateDisplay';
-import { OverlayManager } from './OverlayManager';
 import { MissionPlanning } from './MissionPlanning';
 import { C2Dashboard } from './C2Dashboard';
 import { ThreatTracker } from './ThreatTracker';
@@ -52,7 +51,6 @@ export default function Map() {
     const [currentCoords, setCurrentCoords] = useState<{ lat: number; lng: number } | null>(null);
     const [coordinateFormat, setCoordinateFormat] = useState<'DD' | 'DMS' | 'MGRS'>('DD');
     const [showMissionPanel, setShowMissionPanel] = useState(false);
-    const [showOverlayManager, setShowOverlayManager] = useState(false);
     const [showC2Dashboard, setShowC2Dashboard] = useState(true);
     const [showThreatTracker, setShowThreatTracker] = useState(false);
     const [showBattleRhythm, setShowBattleRhythm] = useState(false);
@@ -1365,15 +1363,6 @@ export default function Map() {
                         </Text>
                         <Button
                             variant="light"
-                            color="tacticalBlue"
-                            fullWidth
-                            leftSection={<IconLayersLinked size={16} />}
-                            onClick={() => setShowOverlayManager(!showOverlayManager)}
-                        >
-                            Overlay Manager
-                        </Button>
-                        <Button
-                            variant="light"
                             color="tacticalGreen"
                             fullWidth
                             leftSection={<IconSend size={16} />}
@@ -1381,37 +1370,6 @@ export default function Map() {
                         >
                             Mission Planning
                         </Button>
-                    </Stack>
-
-                    <Divider color="rgba(100, 255, 218, 0.3)" />
-
-                    <Stack gap="xs">
-                        <Text size="xs" fw={700} className="text-glow-cyan" style={{ textTransform: 'uppercase', letterSpacing: '1px' }}>
-                            Map Style
-                        </Text>
-                        <SegmentedControl
-                            size="xs"
-                            value={mapStyle}
-                            onChange={(value) => setMapStyle(value as any)}
-                            data={[
-                                { label: 'Satellite', value: 'satellite' },
-                                { label: 'Terrain', value: 'terrain' },
-                                { label: 'Dark', value: 'dark' },
-                                { label: 'Tactical', value: 'tactical' }
-                            ]}
-                            color="tacticalCyan"
-                            orientation="vertical"
-                            styles={{
-                                root: {
-                                    backgroundColor: 'rgba(15, 23, 42, 0.8)',
-                                },
-                                label: {
-                                    color: '#e8eaed',
-                                    fontSize: '0.7rem',
-                                    padding: '8px 12px',
-                                }
-                            }}
-                        />
                     </Stack>
 
                     <Divider color="rgba(100, 255, 218, 0.3)" />
@@ -1453,11 +1411,6 @@ export default function Map() {
                         setShowMissionPanel(false);
                     }}
                 />
-            )}
-
-            {/* Overlay Manager Panel */}
-            {showOverlayManager && (
-                <OverlayManager onClose={() => setShowOverlayManager(false)} />
             )}
 
             {/* C2 Dashboard */}
