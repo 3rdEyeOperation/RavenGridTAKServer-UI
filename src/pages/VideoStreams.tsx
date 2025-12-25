@@ -323,6 +323,6 @@ export default function VideoStreams() {
 
                         >{t("Close Stream")}</Button>
                     </AspectRatio>
-        </>
+        </Paper>
 );
 }
