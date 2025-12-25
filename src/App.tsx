@@ -33,9 +33,6 @@ export default function App() {
                 backdropFilter: 'blur(10px)',
                 boxShadow: '0 0 30px rgba(100, 255, 218, 0.3)',
               },
-              description: {
-                color: '#e8eaed',
-              },
             }}
           />
           <BrowserRouter>
