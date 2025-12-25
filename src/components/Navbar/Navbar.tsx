@@ -26,7 +26,7 @@ import {
     IconPlugConnected,
     IconPlug,
     IconCircleMinus,
-    IconUsersGroup, IconLink, IconUser, IconLanguage, IconSensor
+    IconUsersGroup, IconLink, IconUser, IconLanguage, IconRadar
 } from '@tabler/icons-react';
 import {
     NavLink,
@@ -102,7 +102,7 @@ export default function Navbar() {
         { link: '/video_streams', label: t('Video Streams'), icon: IconVideo },
         { link: '/video_recordings', label: t('Video Recordings'), icon: IconMovie },
         { link: '/meshtastic', label: t('Meshtastic'), icon: MeshtasticLogo },
-        { link: '/sensor', label: t('Sensor'), icon: IconSensor },
+        { link: '/sensor', label: t('Sensor'), icon: IconRadar },
         { link: '/missions', label: t('Missions'), icon: IconRefresh },
     ];
 

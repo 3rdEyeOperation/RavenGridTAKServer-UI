@@ -21,7 +21,7 @@ import {
     Alert,
 } from '@mantine/core';
 import {
-    IconSensor,
+    IconRadar,
     IconPlug,
     IconPlugOff,
     IconRefresh,
@@ -105,7 +105,7 @@ export default function Sensor() {
             case 'environmental':
                 return IconWind;
             default:
-                return IconSensor;
+                return IconRadar;
         }
     };
 
@@ -190,7 +190,7 @@ export default function Sensor() {
             <Paper shadow="md" p="md" className="tactical-card">
                 <Group justify="space-between" mb="md">
                     <Group>
-                        <IconSensor size={32} className="text-glow-cyan" />
+                        <IconRadar size={32} className="text-glow-cyan" />
                         <Title order={2} className="text-glow-cyan">
                             Sensor Management
                         </Title>

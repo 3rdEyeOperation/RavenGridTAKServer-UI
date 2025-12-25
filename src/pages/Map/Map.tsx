@@ -724,12 +724,19 @@ export default function Map() {
                         weight: 2
                     });
                     
-                    const area = L.GeometryUtil.geodesicArea(polygon.getLatLngs()[0] as L.LatLng[]);
+                    // Calculate approximate area using bounds
+                    const bounds = polygon.getBounds();
+                    const sw = bounds.getSouthWest();
+                    const ne = bounds.getNorthEast();
+                    const widthKm = sw.distanceTo(L.latLng(sw.lat, ne.lng)) / 1000;
+                    const heightKm = sw.distanceTo(L.latLng(ne.lat, sw.lng)) / 1000;
+                    const approxArea = widthKm * heightKm;
+                    
                     const popup = L.popup()
                         .setContent(`<div style="color: #00e38a; font-family: 'JetBrains Mono', monospace; background: #0a0e14; padding: 8px; border-radius: 4px;">
                             <strong style="color: #00e38a;">POLYGON</strong><br>
                             <strong>Vertices:</strong> ${polygonPoints.length}<br>
-                            <strong>Area:</strong> ${(area / 1000000).toFixed(3)} km²<br>
+                            <strong>Approx Area:</strong> ${approxArea.toFixed(3)} km²<br>
                         </div>`);
                     
                     polygon.bindPopup(popup).openPopup();
@@ -742,7 +749,7 @@ export default function Map() {
                     
                     notifications.show({
                         title: 'Polygon Completed',
-                        message: `${polygonPoints.length} vertices, ${(area / 1000000).toFixed(3)} km²`,
+                        message: `${polygonPoints.length} vertices, ${approxArea.toFixed(3)} km²`,
                         color: 'tacticalGreen',
                         autoClose: 2000,
                     });
