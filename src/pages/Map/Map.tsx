@@ -1,15 +1,15 @@
 import React, { ReactElement, useEffect, useState, useRef } from 'react';
 import { renderToString } from 'react-dom/server';
-import { LayersControl, MapContainer, ScaleControl, TileLayer, useMap, WMSTileLayer } from 'react-leaflet';
+import { LayersControl, MapContainer, ScaleControl, TileLayer, useMap, WMSTileLayer, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import 'react-leaflet-fullscreen/styles.css';
 import 'leaflet.marker.slideto';
 import 'leaflet-rotatedmarker';
-import { Divider, Drawer, Image, Paper, Table, Text, useComputedColorScheme, ActionIcon, Group, Tooltip, Badge, Stack, Switch, SegmentedControl, Button } from '@mantine/core';
+import { Divider, Drawer, Image, Paper, Table, Text, useComputedColorScheme, ActionIcon, Group, Tooltip, Badge, Stack, Switch, SegmentedControl, Button, Collapse } from '@mantine/core';
 import axios from 'axios';
 import { notifications } from '@mantine/notifications';
-import { IconX, IconRuler, IconMapPin, IconCircle, IconRoute, IconCrosshair, IconStack2, Icon3dCubeSphere, IconTarget, IconCurrentLocation } from '@tabler/icons-react';
+import { IconX, IconRuler, IconMapPin, IconCircle, IconRoute, IconCrosshair, IconStack2, Icon3dCubeSphere, IconTarget, IconCurrentLocation, IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
 import * as milsymbol from 'milsymbol';
 import { useDisclosure } from '@mantine/hooks';
 import GreatCircle from './GreatCircle';
@@ -31,12 +31,15 @@ export default function Map() {
     const [drawerTitle, setDrawerTitle] = useState('');
     const [detailRows, setDetailRows] = useState<ReactElement[]>([]);
     const [positionRows, setPositionRows] = useState<ReactElement[]>([]);
-    const [showToolbar, setShowToolbar] = useState(true);
+    const [showSidebar, setShowSidebar] = useState(true);
     const [measureMode, setMeasureMode] = useState(false);
+    const [measurePoints, setMeasurePoints] = useState<L.LatLng[]>([]);
     const [drawMode, setDrawMode] = useState<'none' | 'marker' | 'circle' | 'line'>('none');
     const [showTrails, setShowTrails] = useState(false);
     const [mapStyle, setMapStyle] = useState<'satellite' | 'terrain' | 'dark' | 'tactical'>('satellite');
     const mapRef = useRef<L.Map | null>(null);
+    const measureLayerRef = useRef<L.LayerGroup>(new L.LayerGroup());
+    const drawLayerRef = useRef<L.LayerGroup>(new L.LayerGroup());
     const computedColorScheme = useComputedColorScheme('light', { getInitialValueInEffect: true });
 
     const eudsLayer = new L.LayerGroup();
@@ -228,6 +231,90 @@ export default function Map() {
         }
     }
 
+    function MapClickHandler() {
+        useMapEvents({
+            click: (e) => {
+                if (measureMode) {
+                    const newPoints = [...measurePoints, e.latlng];
+                    setMeasurePoints(newPoints);
+                    
+                    if (newPoints.length > 1) {
+                        const lastPoint = newPoints[newPoints.length - 2];
+                        const distance = e.latlng.distanceTo(lastPoint);
+                        
+                        const line = L.polyline([lastPoint, e.latlng], {
+                            color: '#64ffda',
+                            weight: 2,
+                            dashArray: '5, 10'
+                        });
+                        
+                        const totalDistance = newPoints.reduce((acc, point, i) => {
+                            if (i === 0) return 0;
+                            return acc + point.distanceTo(newPoints[i - 1]);
+                        }, 0);
+                        
+                        line.bindPopup(`<div style="color: #64ffda; font-family: 'JetBrains Mono', monospace;">
+                            <strong>Distance:</strong> ${(totalDistance / 1000).toFixed(2)} km<br>
+                            <strong>Segment:</strong> ${(distance / 1000).toFixed(2)} km
+                        </div>`);
+                        
+                        measureLayerRef.current.addLayer(line);
+                    }
+                    
+                    const marker = L.circleMarker(e.latlng, {
+                        radius: 5,
+                        fillColor: '#64ffda',
+                        color: '#64ffda',
+                        weight: 2,
+                        opacity: 1,
+                        fillOpacity: 0.8
+                    });
+                    
+                    measureLayerRef.current.addLayer(marker);
+                } else if (drawMode === 'marker') {
+                    const marker = L.marker(e.latlng, {
+                        icon: L.divIcon({
+                            className: 'tactical-marker',
+                            html: '<div style="background: #64ffda; width: 12px; height: 12px; border-radius: 50%; border: 2px solid #0a0e14; box-shadow: 0 0 10px #64ffda;"></div>',
+                            iconSize: [12, 12]
+                        })
+                    });
+                    
+                    marker.bindPopup(`<div style="color: #64ffda; font-family: 'JetBrains Mono', monospace;">
+                        <strong>Lat:</strong> ${e.latlng.lat.toFixed(6)}<br>
+                        <strong>Lon:</strong> ${e.latlng.lng.toFixed(6)}
+                    </div>`);
+                    
+                    drawLayerRef.current.addLayer(marker);
+                } else if (drawMode === 'circle') {
+                    const circle = L.circle(e.latlng, {
+                        radius: 1000,
+                        color: '#64ffda',
+                        fillColor: '#64ffda',
+                        fillOpacity: 0.2,
+                        weight: 2
+                    });
+                    
+                    drawLayerRef.current.addLayer(circle);
+                } else if (drawMode === 'line') {
+                    // For line drawing, we'll need a temporary array
+                    // This is simplified - a full implementation would need state management
+                    const marker = L.circleMarker(e.latlng, {
+                        radius: 5,
+                        fillColor: '#64ffda',
+                        color: '#64ffda',
+                        weight: 2,
+                        opacity: 1,
+                        fillOpacity: 0.8
+                    });
+                    
+                    drawLayerRef.current.addLayer(marker);
+                }
+            }
+        });
+        return null;
+    }
+
     function MapContext() {
         const map = useMap();
         const fullscreenControlRef = useRef<L.Control.Fullscreen | null>(null);
@@ -237,6 +324,8 @@ export default function Map() {
             const fullscreenControl = L.control.fullscreen();
             fullscreenControlRef.current = fullscreenControl;
             map.addControl(fullscreenControl);
+            map.addLayer(measureLayerRef.current);
+            map.addLayer(drawLayerRef.current);
         }, [map]);
 
         useEffect(() => {
@@ -468,23 +557,53 @@ export default function Map() {
 
     return (
         <>
-            {/* Tactical Control Panel */}
-            {showToolbar && (
-                <Paper 
-                    shadow="xl" 
-                    p="md" 
-                    className="tactical-card"
-                    style={{
-                        position: 'fixed',
-                        top: '5.5rem',
-                        left: '280px',
-                        zIndex: 1000,
-                        backgroundColor: 'rgba(10, 14, 20, 0.95)',
-                        border: '1px solid rgba(100, 255, 218, 0.4)',
-                        backdropFilter: 'blur(10px)',
-                        boxShadow: '0 0 30px rgba(100, 255, 218, 0.2)',
-                    }}
-                >
+            {/* Collapsible Tactical Sidebar */}
+            <Paper
+                shadow="xl"
+                className="tactical-card"
+                style={{
+                    position: 'fixed',
+                    top: '5.5rem',
+                    right: showSidebar ? '0' : '-320px',
+                    width: '320px',
+                    height: 'calc(100vh - 5.5rem)',
+                    zIndex: 1000,
+                    backgroundColor: 'rgba(10, 14, 20, 0.95)',
+                    border: '1px solid rgba(100, 255, 218, 0.4)',
+                    borderRight: 'none',
+                    backdropFilter: 'blur(10px)',
+                    boxShadow: '-5px 0 30px rgba(100, 255, 218, 0.2)',
+                    transition: 'right 0.3s ease-in-out',
+                    overflowY: 'auto',
+                }}
+            >
+                <Stack gap="md" p="md">
+                    {/* Situation Awareness Header */}
+                    <Group justify="space-between">
+                        <Badge 
+                            size="lg" 
+                            variant="light" 
+                            color="tacticalGreen"
+                            className="status-online"
+                            leftSection={<IconTarget size={14} />}
+                        >
+                            {Object.keys(markers).length} Contacts
+                        </Badge>
+                        <Tooltip label={showSidebar ? "Hide Sidebar" : "Show Sidebar"}>
+                            <ActionIcon 
+                                size="lg"
+                                variant="light"
+                                color="tacticalCyan"
+                                onClick={() => setShowSidebar(!showSidebar)}
+                            >
+                                {showSidebar ? <IconChevronRight size={18} /> : <IconChevronLeft size={18} />}
+                            </ActionIcon>
+                        </Tooltip>
+                    </Group>
+
+                    <Divider color="rgba(100, 255, 218, 0.3)" />
+
+                    {/* Tactical Tools Section */}
                     <Stack gap="xs">
                         <Text size="xs" fw={700} className="text-glow-cyan" style={{ textTransform: 'uppercase', letterSpacing: '1px' }}>
                             Tactical Tools
@@ -495,7 +614,13 @@ export default function Map() {
                                     size="lg" 
                                     variant={measureMode ? "filled" : "light"}
                                     color="tacticalCyan"
-                                    onClick={() => setMeasureMode(!measureMode)}
+                                    onClick={() => {
+                                        setMeasureMode(!measureMode);
+                                        if (!measureMode) {
+                                            setMeasurePoints([]);
+                                            measureLayerRef.current.clearLayers();
+                                        }
+                                    }}
                                     className={measureMode ? "status-active" : ""}
                                 >
                                     <IconRuler size={18} />
@@ -546,7 +671,39 @@ export default function Map() {
                                 </ActionIcon>
                             </Tooltip>
                         </Group>
-                        <Divider color="rgba(100, 255, 218, 0.3)" />
+                        {measureMode && (
+                            <Text size="xs" c="tacticalCyan" style={{ fontFamily: 'JetBrains Mono, monospace' }}>
+                                Click on map to measure distance
+                            </Text>
+                        )}
+                        {drawMode !== 'none' && (
+                            <Text size="xs" c="tacticalCyan" style={{ fontFamily: 'JetBrains Mono, monospace' }}>
+                                Click on map to draw {drawMode}
+                            </Text>
+                        )}
+                        <Button
+                            size="xs"
+                            variant="light"
+                            color="tacticalRed"
+                            onClick={() => {
+                                measureLayerRef.current.clearLayers();
+                                drawLayerRef.current.clearLayers();
+                                setMeasurePoints([]);
+                                setMeasureMode(false);
+                                setDrawMode('none');
+                            }}
+                        >
+                            Clear All Tools
+                        </Button>
+                    </Stack>
+
+                    <Divider color="rgba(100, 255, 218, 0.3)" />
+
+                    {/* Map Settings Section */}
+                    <Stack gap="xs">
+                        <Text size="xs" fw={700} className="text-glow-cyan" style={{ textTransform: 'uppercase', letterSpacing: '1px' }}>
+                            Map Settings
+                        </Text>
                         <Group gap="xs" align="center">
                             <Text size="xs" c="dimmed">Trails:</Text>
                             <Switch 
@@ -556,69 +713,55 @@ export default function Map() {
                                 color="tacticalCyan"
                             />
                         </Group>
-                        <SegmentedControl
-                            size="xs"
-                            value={mapStyle}
-                            onChange={(value) => setMapStyle(value as any)}
-                            data={[
-                                { label: 'Satellite', value: 'satellite' },
-                                { label: 'Terrain', value: 'terrain' },
-                                { label: 'Dark', value: 'dark' },
-                                { label: 'Tactical', value: 'tactical' }
-                            ]}
-                            color="tacticalCyan"
-                            styles={{
-                                root: {
-                                    backgroundColor: 'rgba(15, 23, 42, 0.8)',
-                                },
-                                label: {
-                                    color: '#e8eaed',
-                                    fontSize: '0.7rem',
-                                    padding: '4px 8px',
-                                }
-                            }}
-                        />
+                        <Stack gap="xs">
+                            <Text size="xs" c="dimmed">Map Style:</Text>
+                            <SegmentedControl
+                                size="xs"
+                                value={mapStyle}
+                                onChange={(value) => setMapStyle(value as any)}
+                                data={[
+                                    { label: 'Satellite', value: 'satellite' },
+                                    { label: 'Terrain', value: 'terrain' },
+                                    { label: 'Dark', value: 'dark' },
+                                    { label: 'Tactical', value: 'tactical' }
+                                ]}
+                                color="tacticalCyan"
+                                orientation="vertical"
+                                styles={{
+                                    root: {
+                                        backgroundColor: 'rgba(15, 23, 42, 0.8)',
+                                    },
+                                    label: {
+                                        color: '#e8eaed',
+                                        fontSize: '0.7rem',
+                                        padding: '8px 12px',
+                                    }
+                                }}
+                            />
+                        </Stack>
                     </Stack>
-                </Paper>
-            )}
-
-            {/* Situation Awareness Status Bar */}
-            <Paper 
-                shadow="xl" 
-                p="xs"
-                className="status-active"
-                style={{
-                    position: 'fixed',
-                    top: '5.5rem',
-                    right: '20px',
-                    zIndex: 1000,
-                    backgroundColor: 'rgba(10, 14, 20, 0.95)',
-                    border: '1px solid rgba(100, 255, 218, 0.4)',
-                    backdropFilter: 'blur(10px)',
-                }}
-            >
-                <Group gap="md">
-                    <Badge 
-                        size="lg" 
-                        variant="light" 
-                        color="tacticalGreen"
-                        className="status-online"
-                        leftSection={<IconTarget size={14} />}
-                    >
-                        {Object.keys(markers).length} Contacts
-                    </Badge>
-                    <Tooltip label="Toggle Toolbar">
-                        <ActionIcon 
-                            size="md" 
-                            variant="subtle"
-                            color="tacticalCyan"
-                            onClick={() => setShowToolbar(!showToolbar)}
-                        >
-                            <IconStack2 size={18} />
-                        </ActionIcon>
-                    </Tooltip>
-                </Group>
+                </Stack>
             </Paper>
+
+            {/* Sidebar Toggle Button (when sidebar is hidden) */}
+            {!showSidebar && (
+                <ActionIcon
+                    size="lg"
+                    variant="filled"
+                    color="tacticalCyan"
+                    className="status-active"
+                    style={{
+                        position: 'fixed',
+                        top: '6rem',
+                        right: '10px',
+                        zIndex: 1000,
+                        boxShadow: '0 0 20px rgba(100, 255, 218, 0.5)',
+                    }}
+                    onClick={() => setShowSidebar(true)}
+                >
+                    <IconChevronLeft size={18} />
+                </ActionIcon>
+            )}
 
             <Drawer
               radius="md"
@@ -670,6 +813,7 @@ export default function Map() {
                   style={{ height: 'calc(100vh - 10rem)', width: '100%', zIndex: 90 }}
                 >
                     <MapContext />
+                    <MapClickHandler />
                     <ScaleControl position="bottomleft" />
                     <LayersControl>
                         {/* Dark Tactical Maps */}

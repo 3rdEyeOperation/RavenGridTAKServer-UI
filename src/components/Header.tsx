@@ -3,7 +3,7 @@ import {
     Group,
     Button,
     Box,
-    ActionIcon, useComputedColorScheme, useMantineColorScheme, Image,
+    ActionIcon, useComputedColorScheme, useMantineColorScheme, Image, Text,
 } from '@mantine/core';
 import {
     IconSun,
@@ -39,7 +39,21 @@ export const Header = () => {
         <Box pb={0} bg={computedColorScheme === 'light' ? 'white' : 'dark.7'}>
             <header className={classes.header}>
                 <Group justify="space-between" h="100%">
-                    <Image src={Logo} h={50} w="auto" />
+                    <Group gap="md">
+                        <Image src={Logo} h={50} w="auto" />
+                        <Text 
+                            size="xl" 
+                            fw={700} 
+                            className="text-glow-cyan"
+                            style={{ 
+                                textTransform: 'uppercase', 
+                                letterSpacing: '2px',
+                                fontFamily: 'system-ui, -apple-system, sans-serif'
+                            }}
+                        >
+                            RavenGrid AI
+                        </Text>
+                    </Group>
 
                     <Group>
                         <Button
