@@ -9,7 +9,7 @@ import 'leaflet-rotatedmarker';
 import { Divider, Drawer, Image, Paper, Table, Text, useComputedColorScheme, ActionIcon, Group, Tooltip, Badge, Stack, Switch, SegmentedControl, Button, Collapse } from '@mantine/core';
 import axios from 'axios';
 import { notifications } from '@mantine/notifications';
-import { IconX, IconRuler, IconMapPin, IconCircle, IconRoute, IconCrosshair, IconStack2, Icon3dCubeSphere, IconTarget, IconCurrentLocation, IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
+import { IconX, IconRuler, IconMapPin, IconCircle, IconRoute, IconCrosshair, IconStack2, Icon3dCubeSphere, IconTarget, IconCurrentLocation, IconChevronLeft, IconChevronRight, IconPolygon, IconRectangle, IconSquare, IconPencil, IconTrash, IconEdit, IconSend, IconUsers, IconMapSearch, IconCompass, IconAlertTriangle, IconFirstAidKit, IconBuildingCommunity, IconFlag, IconCamera, IconVideo, IconSettings, IconLayersLinked, IconPlus, IconMinus, IconMap2, IconWorldLatitude, IconWorldLongitude, IconLocation, IconClock, IconActivity } from '@tabler/icons-react';
 import * as milsymbol from 'milsymbol';
 import { useDisclosure } from '@mantine/hooks';
 import GreatCircle from './GreatCircle';
@@ -20,6 +20,13 @@ import 'leaflet.fullscreen';
 import 'leaflet.fullscreen/Control.FullScreen.css';
 import Arrow from './Arrow';
 import Video from './Video';
+import { ATAKToolbar } from './ATAKToolbar';
+import { CoordinateDisplay } from './CoordinateDisplay';
+import { OverlayManager } from './OverlayManager';
+import { MissionPlanning } from './MissionPlanning';
+import { C2Dashboard } from './C2Dashboard';
+import { ThreatTracker } from './ThreatTracker';
+import { BattleRhythm } from './BattleRhythm';
 
 export default function Map() {
     const [markers, setMarkers] = useState<{ [uid: string]: L.Marker }>({});
@@ -32,14 +39,27 @@ export default function Map() {
     const [detailRows, setDetailRows] = useState<ReactElement[]>([]);
     const [positionRows, setPositionRows] = useState<ReactElement[]>([]);
     const [showSidebar, setShowSidebar] = useState(true);
+    const [showRadialMenu, setShowRadialMenu] = useState(false);
+    const [radialMenuPosition, setRadialMenuPosition] = useState<{ x: number; y: number } | null>(null);
+    const [selectedTool, setSelectedTool] = useState<string>('none');
     const [measureMode, setMeasureMode] = useState(false);
     const [measurePoints, setMeasurePoints] = useState<L.LatLng[]>([]);
-    const [drawMode, setDrawMode] = useState<'none' | 'marker' | 'circle' | 'line'>('none');
+    const [linePoints, setLinePoints] = useState<L.LatLng[]>([]);
+    const [drawMode, setDrawMode] = useState<'none' | 'marker' | 'circle' | 'line' | 'polygon' | 'rectangle'>('none');
     const [showTrails, setShowTrails] = useState(false);
     const [mapStyle, setMapStyle] = useState<'satellite' | 'terrain' | 'dark' | 'tactical'>('satellite');
+    const [currentCoords, setCurrentCoords] = useState<{ lat: number; lng: number } | null>(null);
+    const [coordinateFormat, setCoordinateFormat] = useState<'DD' | 'DMS' | 'MGRS'>('DD');
+    const [showMissionPanel, setShowMissionPanel] = useState(false);
+    const [showOverlayManager, setShowOverlayManager] = useState(false);
+    const [showC2Dashboard, setShowC2Dashboard] = useState(true);
+    const [showThreatTracker, setShowThreatTracker] = useState(false);
+    const [showBattleRhythm, setShowBattleRhythm] = useState(false);
     const mapRef = useRef<L.Map | null>(null);
     const measureLayerRef = useRef<L.LayerGroup>(new L.LayerGroup());
     const drawLayerRef = useRef<L.LayerGroup>(new L.LayerGroup());
+    const measureLineRef = useRef<L.Polyline | null>(null);
+    const drawLineRef = useRef<L.Polyline | null>(null);
     const computedColorScheme = useComputedColorScheme('light', { getInitialValueInEffect: true });
 
     const eudsLayer = new L.LayerGroup();
@@ -232,60 +252,104 @@ export default function Map() {
     }
 
     function MapClickHandler() {
+        const map = useMap();
+        
         useMapEvents({
+            mousemove: (e) => {
+                setCurrentCoords({ lat: e.latlng.lat, lng: e.latlng.lng });
+            },
             click: (e) => {
                 if (measureMode) {
                     const newPoints = [...measurePoints, e.latlng];
                     setMeasurePoints(newPoints);
                     
+                    // Add marker at click point
+                    const marker = L.circleMarker(e.latlng, {
+                        radius: 5,
+                        fillColor: '#64ffda',
+                        color: '#0a0e14',
+                        weight: 2,
+                        opacity: 1,
+                        fillOpacity: 1
+                    });
+                    measureLayerRef.current.addLayer(marker);
+                    
+                    // Update or create polyline
                     if (newPoints.length > 1) {
-                        const lastPoint = newPoints[newPoints.length - 2];
-                        const distance = e.latlng.distanceTo(lastPoint);
+                        // Remove old line if exists
+                        if (measureLineRef.current) {
+                            measureLayerRef.current.removeLayer(measureLineRef.current);
+                        }
                         
-                        const line = L.polyline([lastPoint, e.latlng], {
-                            color: '#64ffda',
-                            weight: 2,
-                            dashArray: '5, 10'
-                        });
-                        
+                        // Calculate total distance
                         const totalDistance = newPoints.reduce((acc, point, i) => {
                             if (i === 0) return 0;
                             return acc + point.distanceTo(newPoints[i - 1]);
                         }, 0);
                         
-                        line.bindPopup(`<div style="color: #64ffda; font-family: 'JetBrains Mono', monospace;">
-                            <strong>Distance:</strong> ${(totalDistance / 1000).toFixed(2)} km<br>
-                            <strong>Segment:</strong> ${(distance / 1000).toFixed(2)} km
-                        </div>`);
+                        // Create new polyline
+                        const line = L.polyline(newPoints, {
+                            color: '#64ffda',
+                            weight: 3,
+                            opacity: 0.8,
+                            dashArray: '10, 5'
+                        });
+                        
+                        // Add popup at the last point showing total distance
+                        const popup = L.popup({
+                            closeButton: true,
+                            autoClose: false,
+                            closeOnClick: false
+                        })
+                        .setLatLng(e.latlng)
+                        .setContent(`<div style="color: #64ffda; font-family: 'JetBrains Mono', monospace; background: #0a0e14; padding: 8px; border-radius: 4px;">
+                            <strong style="color: #00e38a;">TOTAL DISTANCE</strong><br>
+                            <span style="font-size: 16px; font-weight: bold;">${(totalDistance / 1000).toFixed(3)} km</span><br>
+                            <span style="font-size: 12px;">${totalDistance.toFixed(0)} meters</span><br>
+                            <span style="font-size: 10px; color: #888;">Points: ${newPoints.length}</span>
+                        </div>`)
+                        .openOn(map);
                         
                         measureLayerRef.current.addLayer(line);
+                        measureLineRef.current = line;
+                        
+                        // Show notification for segment distance if more than 2 points
+                        if (newPoints.length > 2) {
+                            const segmentDist = e.latlng.distanceTo(newPoints[newPoints.length - 2]);
+                            notifications.show({
+                                title: 'Segment Added',
+                                message: `+${(segmentDist / 1000).toFixed(3)} km`,
+                                color: 'tacticalCyan',
+                                autoClose: 2000,
+                            });
+                        }
                     }
-                    
-                    const marker = L.circleMarker(e.latlng, {
-                        radius: 5,
-                        fillColor: '#64ffda',
-                        color: '#64ffda',
-                        weight: 2,
-                        opacity: 1,
-                        fillOpacity: 0.8
-                    });
-                    
-                    measureLayerRef.current.addLayer(marker);
                 } else if (drawMode === 'marker') {
                     const marker = L.marker(e.latlng, {
                         icon: L.divIcon({
                             className: 'tactical-marker',
-                            html: '<div style="background: #64ffda; width: 12px; height: 12px; border-radius: 50%; border: 2px solid #0a0e14; box-shadow: 0 0 10px #64ffda;"></div>',
-                            iconSize: [12, 12]
+                            html: '<div style="background: #64ffda; width: 16px; height: 16px; border-radius: 50%; border: 3px solid #0a0e14; box-shadow: 0 0 15px #64ffda;"></div>',
+                            iconSize: [16, 16],
+                            iconAnchor: [8, 8]
                         })
                     });
                     
-                    marker.bindPopup(`<div style="color: #64ffda; font-family: 'JetBrains Mono', monospace;">
-                        <strong>Lat:</strong> ${e.latlng.lat.toFixed(6)}<br>
-                        <strong>Lon:</strong> ${e.latlng.lng.toFixed(6)}
-                    </div>`);
+                    const popup = L.popup()
+                        .setContent(`<div style="color: #64ffda; font-family: 'JetBrains Mono', monospace; background: #0a0e14; padding: 8px; border-radius: 4px;">
+                            <strong style="color: #00e38a;">MARKER</strong><br>
+                            <strong>Lat:</strong> ${e.latlng.lat.toFixed(6)}<br>
+                            <strong>Lon:</strong> ${e.latlng.lng.toFixed(6)}
+                        </div>`);
                     
+                    marker.bindPopup(popup).openPopup();
                     drawLayerRef.current.addLayer(marker);
+                    
+                    notifications.show({
+                        title: 'Marker Placed',
+                        message: `${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)}`,
+                        color: 'tacticalCyan',
+                        autoClose: 2000,
+                    });
                 } else if (drawMode === 'circle') {
                     const circle = L.circle(e.latlng, {
                         radius: 1000,
@@ -295,20 +359,61 @@ export default function Map() {
                         weight: 2
                     });
                     
+                    const popup = L.popup()
+                        .setContent(`<div style="color: #64ffda; font-family: 'JetBrains Mono', monospace; background: #0a0e14; padding: 8px; border-radius: 4px;">
+                            <strong style="color: #00e38a;">CIRCLE</strong><br>
+                            <strong>Radius:</strong> 1000 m<br>
+                            <strong>Center:</strong> ${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)}
+                        </div>`);
+                    
+                    circle.bindPopup(popup).openPopup();
                     drawLayerRef.current.addLayer(circle);
+                    
+                    notifications.show({
+                        title: 'Circle Drawn',
+                        message: 'Radius: 1000m',
+                        color: 'tacticalCyan',
+                        autoClose: 2000,
+                    });
                 } else if (drawMode === 'line') {
-                    // For line drawing, we'll need a temporary array
-                    // This is simplified - a full implementation would need state management
+                    const newLinePoints = [...linePoints, e.latlng];
+                    setLinePoints(newLinePoints);
+                    
+                    // Add marker at click point
                     const marker = L.circleMarker(e.latlng, {
                         radius: 5,
-                        fillColor: '#64ffda',
-                        color: '#64ffda',
+                        fillColor: '#ff9721',
+                        color: '#0a0e14',
                         weight: 2,
                         opacity: 1,
-                        fillOpacity: 0.8
+                        fillOpacity: 1
                     });
-                    
                     drawLayerRef.current.addLayer(marker);
+                    
+                    // Update or create polyline
+                    if (newLinePoints.length > 1) {
+                        // Remove old line if exists
+                        if (drawLineRef.current) {
+                            drawLayerRef.current.removeLayer(drawLineRef.current);
+                        }
+                        
+                        // Create new polyline
+                        const line = L.polyline(newLinePoints, {
+                            color: '#ff9721',
+                            weight: 3,
+                            opacity: 0.8
+                        });
+                        
+                        drawLayerRef.current.addLayer(line);
+                        drawLineRef.current = line;
+                        
+                        notifications.show({
+                            title: 'Line Extended',
+                            message: `${newLinePoints.length} points`,
+                            color: 'tacticalOrange',
+                            autoClose: 2000,
+                        });
+                    }
                 }
             }
         });
@@ -557,28 +662,63 @@ export default function Map() {
 
     return (
         <>
-            {/* Collapsible Tactical Sidebar */}
+            {/* ATAK-Style Toolbar (Left Side) */}
+            <ATAKToolbar
+                position="left"
+                selectedTool={selectedTool}
+                onToolSelect={(tool) => {
+                    setSelectedTool(tool);
+                    // Handle tool selection logic
+                    if (tool === 'measure') {
+                        setMeasureMode(true);
+                        setDrawMode('none');
+                    } else if (['marker', 'circle', 'line', 'polygon', 'rectangle'].includes(tool)) {
+                        setDrawMode(tool as any);
+                        setMeasureMode(false);
+                    } else if (tool === 'send-cot') {
+                        setShowMissionPanel(!showMissionPanel);
+                    }
+                }}
+                onClearAll={() => {
+                    measureLayerRef.current.clearLayers();
+                    drawLayerRef.current.clearLayers();
+                    setMeasurePoints([]);
+                    setLinePoints([]);
+                    measureLineRef.current = null;
+                    drawLineRef.current = null;
+                    setMeasureMode(false);
+                    setDrawMode('none');
+                    setSelectedTool('none');
+                    if (mapRef.current) {
+                        mapRef.current.closePopup();
+                    }
+                    notifications.show({
+                        title: 'Cleared',
+                        message: 'All tactical graphics removed',
+                        color: 'tacticalRed',
+                        autoClose: 2000,
+                    });
+                }}
+            />
+
+            {/* Right Side Status Panel */}
             <Paper
                 shadow="xl"
                 className="tactical-card"
                 style={{
                     position: 'fixed',
                     top: '5.5rem',
-                    right: showSidebar ? '0' : '-320px',
+                    right: showSidebar ? '10px' : '-320px',
                     width: '320px',
-                    height: 'calc(100vh - 5.5rem)',
                     zIndex: 1000,
                     backgroundColor: 'rgba(10, 14, 20, 0.95)',
                     border: '1px solid rgba(100, 255, 218, 0.4)',
-                    borderRight: 'none',
                     backdropFilter: 'blur(10px)',
-                    boxShadow: '-5px 0 30px rgba(100, 255, 218, 0.2)',
+                    boxShadow: '0 0 30px rgba(100, 255, 218, 0.2)',
                     transition: 'right 0.3s ease-in-out',
-                    overflowY: 'auto',
                 }}
             >
                 <Stack gap="md" p="md">
-                    {/* Situation Awareness Header */}
                     <Group justify="space-between">
                         <Badge 
                             size="lg" 
@@ -589,7 +729,7 @@ export default function Map() {
                         >
                             {Object.keys(markers).length} Contacts
                         </Badge>
-                        <Tooltip label={showSidebar ? "Hide Sidebar" : "Show Sidebar"}>
+                        <Tooltip label={showSidebar ? "Hide Panel" : "Show Panel"}>
                             <ActionIcon 
                                 size="lg"
                                 variant="light"
@@ -603,145 +743,159 @@ export default function Map() {
 
                     <Divider color="rgba(100, 255, 218, 0.3)" />
 
-                    {/* Tactical Tools Section */}
                     <Stack gap="xs">
                         <Text size="xs" fw={700} className="text-glow-cyan" style={{ textTransform: 'uppercase', letterSpacing: '1px' }}>
-                            Tactical Tools
+                            C2 Panels
                         </Text>
-                        <Group gap="xs">
-                            <Tooltip label="Measure Distance">
-                                <ActionIcon 
-                                    size="lg" 
-                                    variant={measureMode ? "filled" : "light"}
-                                    color="tacticalCyan"
-                                    onClick={() => {
-                                        setMeasureMode(!measureMode);
-                                        if (!measureMode) {
-                                            setMeasurePoints([]);
-                                            measureLayerRef.current.clearLayers();
-                                        }
-                                    }}
-                                    className={measureMode ? "status-active" : ""}
-                                >
-                                    <IconRuler size={18} />
-                                </ActionIcon>
-                            </Tooltip>
-                            <Tooltip label="Place Marker">
-                                <ActionIcon 
-                                    size="lg" 
-                                    variant={drawMode === 'marker' ? "filled" : "light"}
-                                    color="tacticalCyan"
-                                    onClick={() => setDrawMode(drawMode === 'marker' ? 'none' : 'marker')}
-                                >
-                                    <IconMapPin size={18} />
-                                </ActionIcon>
-                            </Tooltip>
-                            <Tooltip label="Draw Circle">
-                                <ActionIcon 
-                                    size="lg" 
-                                    variant={drawMode === 'circle' ? "filled" : "light"}
-                                    color="tacticalCyan"
-                                    onClick={() => setDrawMode(drawMode === 'circle' ? 'none' : 'circle')}
-                                >
-                                    <IconCircle size={18} />
-                                </ActionIcon>
-                            </Tooltip>
-                            <Tooltip label="Draw Line">
-                                <ActionIcon 
-                                    size="lg" 
-                                    variant={drawMode === 'line' ? "filled" : "light"}
-                                    color="tacticalCyan"
-                                    onClick={() => setDrawMode(drawMode === 'line' ? 'none' : 'line')}
-                                >
-                                    <IconRoute size={18} />
-                                </ActionIcon>
-                            </Tooltip>
-                            <Tooltip label="Center on Position">
-                                <ActionIcon 
-                                    size="lg" 
-                                    variant="light"
-                                    color="tacticalGreen"
-                                    onClick={() => {
-                                        if (mapRef.current) {
-                                            mapRef.current.locate({setView: true, maxZoom: 16});
-                                        }
-                                    }}
-                                >
-                                    <IconCurrentLocation size={18} />
-                                </ActionIcon>
-                            </Tooltip>
-                        </Group>
-                        {measureMode && (
-                            <Text size="xs" c="tacticalCyan" style={{ fontFamily: 'JetBrains Mono, monospace' }}>
-                                Click on map to measure distance
-                            </Text>
-                        )}
-                        {drawMode !== 'none' && (
-                            <Text size="xs" c="tacticalCyan" style={{ fontFamily: 'JetBrains Mono, monospace' }}>
-                                Click on map to draw {drawMode}
-                            </Text>
-                        )}
                         <Button
-                            size="xs"
+                            variant="light"
+                            color="tacticalCyan"
+                            fullWidth
+                            leftSection={<IconActivity size={16} />}
+                            onClick={() => setShowC2Dashboard(!showC2Dashboard)}
+                        >
+                            C2 Dashboard
+                        </Button>
+                        <Button
                             variant="light"
                             color="tacticalRed"
-                            onClick={() => {
-                                measureLayerRef.current.clearLayers();
-                                drawLayerRef.current.clearLayers();
-                                setMeasurePoints([]);
-                                setMeasureMode(false);
-                                setDrawMode('none');
-                            }}
+                            fullWidth
+                            leftSection={<IconAlertTriangle size={16} />}
+                            onClick={() => setShowThreatTracker(!showThreatTracker)}
                         >
-                            Clear All Tools
+                            Threat Tracker
+                        </Button>
+                        <Button
+                            variant="light"
+                            color="tacticalBlue"
+                            fullWidth
+                            leftSection={<IconClock size={16} />}
+                            onClick={() => setShowBattleRhythm(!showBattleRhythm)}
+                        >
+                            Battle Rhythm
                         </Button>
                     </Stack>
 
                     <Divider color="rgba(100, 255, 218, 0.3)" />
 
-                    {/* Map Settings Section */}
                     <Stack gap="xs">
                         <Text size="xs" fw={700} className="text-glow-cyan" style={{ textTransform: 'uppercase', letterSpacing: '1px' }}>
-                            Map Settings
+                            Tools
                         </Text>
-                        <Group gap="xs" align="center">
-                            <Text size="xs" c="dimmed">Trails:</Text>
-                            <Switch 
-                                size="xs"
-                                checked={showTrails}
-                                onChange={(e) => setShowTrails(e.currentTarget.checked)}
-                                color="tacticalCyan"
-                            />
-                        </Group>
-                        <Stack gap="xs">
-                            <Text size="xs" c="dimmed">Map Style:</Text>
-                            <SegmentedControl
-                                size="xs"
-                                value={mapStyle}
-                                onChange={(value) => setMapStyle(value as any)}
-                                data={[
-                                    { label: 'Satellite', value: 'satellite' },
-                                    { label: 'Terrain', value: 'terrain' },
-                                    { label: 'Dark', value: 'dark' },
-                                    { label: 'Tactical', value: 'tactical' }
-                                ]}
-                                color="tacticalCyan"
-                                orientation="vertical"
-                                styles={{
-                                    root: {
-                                        backgroundColor: 'rgba(15, 23, 42, 0.8)',
-                                    },
-                                    label: {
-                                        color: '#e8eaed',
-                                        fontSize: '0.7rem',
-                                        padding: '8px 12px',
-                                    }
-                                }}
-                            />
-                        </Stack>
+                        <Button
+                            variant="light"
+                            color="tacticalBlue"
+                            fullWidth
+                            leftSection={<IconLayersLinked size={16} />}
+                            onClick={() => setShowOverlayManager(!showOverlayManager)}
+                        >
+                            Overlay Manager
+                        </Button>
+                        <Button
+                            variant="light"
+                            color="tacticalGreen"
+                            fullWidth
+                            leftSection={<IconSend size={16} />}
+                            onClick={() => setShowMissionPanel(!showMissionPanel)}
+                        >
+                            Mission Planning
+                        </Button>
                     </Stack>
+
+                    <Divider color="rgba(100, 255, 218, 0.3)" />
+
+                    <Stack gap="xs">
+                        <Text size="xs" fw={700} className="text-glow-cyan" style={{ textTransform: 'uppercase', letterSpacing: '1px' }}>
+                            Map Style
+                        </Text>
+                        <SegmentedControl
+                            size="xs"
+                            value={mapStyle}
+                            onChange={(value) => setMapStyle(value as any)}
+                            data={[
+                                { label: 'Satellite', value: 'satellite' },
+                                { label: 'Terrain', value: 'terrain' },
+                                { label: 'Dark', value: 'dark' },
+                                { label: 'Tactical', value: 'tactical' }
+                            ]}
+                            color="tacticalCyan"
+                            orientation="vertical"
+                            styles={{
+                                root: {
+                                    backgroundColor: 'rgba(15, 23, 42, 0.8)',
+                                },
+                                label: {
+                                    color: '#e8eaed',
+                                    fontSize: '0.7rem',
+                                    padding: '8px 12px',
+                                }
+                            }}
+                        />
+                    </Stack>
+
+                    <Divider color="rgba(100, 255, 218, 0.3)" />
+
+                    <Group gap="xs" align="center" justify="space-between">
+                        <Text size="xs" c="dimmed">Track History:</Text>
+                        <Switch 
+                            size="xs"
+                            checked={showTrails}
+                            onChange={(e) => setShowTrails(e.currentTarget.checked)}
+                            color="tacticalCyan"
+                        />
+                    </Group>
                 </Stack>
             </Paper>
+
+            {/* Coordinate Display (Bottom Center) */}
+            {currentCoords && (
+                <CoordinateDisplay
+                    lat={currentCoords.lat}
+                    lng={currentCoords.lng}
+                    format={coordinateFormat}
+                    onFormatChange={setCoordinateFormat}
+                />
+            )}
+
+            {/* Mission Planning Panel */}
+            {showMissionPanel && (
+                <MissionPlanning
+                    onClose={() => setShowMissionPanel(false)}
+                    onSendMission={(mission) => {
+                        console.log('Sending mission:', mission);
+                        notifications.show({
+                            title: 'Mission Sent',
+                            message: `${mission.name} sent to team`,
+                            color: 'tacticalGreen',
+                            autoClose: 3000,
+                        });
+                        setShowMissionPanel(false);
+                    }}
+                />
+            )}
+
+            {/* Overlay Manager Panel */}
+            {showOverlayManager && (
+                <OverlayManager onClose={() => setShowOverlayManager(false)} />
+            )}
+
+            {/* C2 Dashboard */}
+            {showC2Dashboard && (
+                <C2Dashboard
+                    contacts={Object.keys(markers).length}
+                    onClose={() => setShowC2Dashboard(false)}
+                />
+            )}
+
+            {/* Threat Tracker */}
+            {showThreatTracker && (
+                <ThreatTracker onClose={() => setShowThreatTracker(false)} />
+            )}
+
+            {/* Battle Rhythm */}
+            {showBattleRhythm && (
+                <BattleRhythm onClose={() => setShowBattleRhythm(false)} />
+            )}
 
             {/* Sidebar Toggle Button (when sidebar is hidden) */}
             {!showSidebar && (

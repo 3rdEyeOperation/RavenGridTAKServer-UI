@@ -8,6 +8,7 @@ import {
     Menu,
     rem,
     useComputedColorScheme,
+    Text,
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import {
@@ -103,10 +104,23 @@ export function DefaultLayout() {
         >
             <AppShell.Header pb={0} bg={computedColorScheme === 'light' ? 'rgba(10, 14, 20, 0.95)' : 'dark.8'} style={{ borderBottom: '1px solid rgba(100, 255, 218, 0.2)' }}>
                 <Group justify="space-between" pr={5} h="100%">
-                    <Group h="100%" w={300}>
+                    <Group h="100%" w={300} gap="md">
                         <Burger opened={mobileOpened} onClick={toggleMobile} hiddenFrom="sm" size="sm" pl={5} color="cyan" />
                         <Burger opened={desktopOpened} onClick={toggleDesktop} visibleFrom="sm" size="sm" color="cyan" />
                         <Image src={Logo} h={50} w="auto" />
+                        <Text 
+                            size="xl" 
+                            fw={700} 
+                            className="text-glow-cyan"
+                            style={{ 
+                                textTransform: 'uppercase', 
+                                letterSpacing: '2px',
+                                fontFamily: 'system-ui, -apple-system, sans-serif'
+                            }}
+                            visibleFrom="sm"
+                        >
+                            RavenGrid AI
+                        </Text>
                     </Group>
                     <Group>
                         <Menu shadow="md" width={200} trigger="click-hover">
