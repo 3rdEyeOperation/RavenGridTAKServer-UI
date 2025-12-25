@@ -109,6 +109,7 @@ export default function EUDs() {
     return (
         <Paper
             p="xl"
+            className="tactical-paper tactical-card"
             style={{
                 backgroundColor: 'rgba(15, 23, 42, 0.7)',
                 backdropFilter: 'blur(10px)',
@@ -131,7 +132,7 @@ export default function EUDs() {
                     }}
                 />
             </Table.ScrollContainer>
-            <Center><Pagination total={totalPages} value={activePage} onChange={setPage} withEdges /></Center>
+            <Center><Pagination total={totalPages} value={activePage} onChange={setPage} withEdges color="tacticalCyan" /></Center>
         </Paper>
     );
 }

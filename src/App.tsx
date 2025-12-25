@@ -9,6 +9,7 @@ import '@mantine/charts/styles.css';
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
 import '@mantine/dates/styles.css';
+import './tactical-animations.css';
 import './i18n';
 import {I18nextProvider, useTranslation} from "react-i18next";
 
@@ -23,7 +24,26 @@ export default function App() {
   return (
     <I18nextProvider i18n={i18n}>
         <MantineProvider theme={theme}>
-          <Notifications />
+          <Notifications 
+            position="top-right"
+            styles={{
+              notification: {
+                backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                border: '1px solid rgba(100, 255, 218, 0.4)',
+                backdropFilter: 'blur(10px)',
+                boxShadow: '0 0 30px rgba(100, 255, 218, 0.3)',
+              },
+              title: {
+                color: '#64ffda',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+              },
+              description: {
+                color: '#e8eaed',
+              },
+            }}
+          />
           <BrowserRouter>
               <Routes>
                   <Route path="/login" element={<Login />} />

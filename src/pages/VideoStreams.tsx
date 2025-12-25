@@ -130,7 +130,7 @@ export default function VideoStreams() {
 
                         const webrtc_button = <CopyButton value={row.webrtc_link}>{({ copied, copy }) => (
                             <Tooltip label={row.webrtc_link}>
-                                <Button color={copied ? 'teal' : 'blue'} onClick={copy}>
+                                <Button color={copied ? 'tacticalGreen' : 'tacticalCyan'} onClick={copy}>
                                     {copied ? t('Copied WebRTC Link') : t('Copy WebRTC Link')}
                                 </Button>
                             </Tooltip>
@@ -139,7 +139,7 @@ export default function VideoStreams() {
 
                         const rtsp_button = <CopyButton value={row.rtsp_link}>{({ copied, copy }) => (
                             <Tooltip label={row.rtsp_link}>
-                                <Button color={copied ? 'teal' : 'blue'} onClick={copy}>
+                                <Button color={copied ? 'tacticalGreen' : 'tacticalCyan'} onClick={copy}>
                                     {copied ? t('Copied RTSP Link') : t('Copy RTSP Link')}
                                 </Button>
                             </Tooltip>
@@ -148,7 +148,7 @@ export default function VideoStreams() {
 
                         const hls_button = <CopyButton value={`${row.hls_link}?jwt=${localStorage.getItem('token')}`}>{({ copied, copy }) => (
                             <Tooltip label={`${row.hls_link}?jwt=${localStorage.getItem('token')}`}>
-                                <Button color={copied ? 'teal' : 'blue'} onClick={copy}>
+                                <Button color={copied ? 'tacticalGreen' : 'tacticalCyan'} onClick={copy}>
                                     {copied ? t('Copied HLS Link') : t('Copy HLS Link')}
                                 </Button>
                             </Tooltip>
@@ -239,6 +239,7 @@ export default function VideoStreams() {
         <>
             <Paper
                 p="xl"
+                className="tactical-paper tactical-card"
                 style={{
                     backgroundColor: 'rgba(15, 23, 42, 0.7)',
                     backdropFilter: 'blur(10px)',
@@ -247,14 +248,14 @@ export default function VideoStreams() {
             >
                 <LoadingOverlay visible={loading} zIndex={1000} overlayProps={{ radius: "sm", blur: 2, fixed: true }} />
 
-                <Button onClick={() => { setAddVideoOpened(true); }} mb="md" mr="md" leftSection={<IconPlus size={14} />}>Add Video</Button>
+                <Button onClick={() => { setAddVideoOpened(true); }} mb="md" mr="md" leftSection={<IconPlus size={14} />} variant="filled" color="tacticalCyan">Add Video</Button>
                 <Tooltip
                   multiline
                   w={220}
                   withArrow
                   label={t("Start streaming in the browser using your device's camera")}
                 >
-                    <Button onClick={() => { startStreaming(); }} mb="md" leftSection={<IconVideo size={14} />}>Start Streaming</Button>
+                    <Button onClick={() => { startStreaming(); }} mb="md" leftSection={<IconVideo size={14} />} variant="filled" color="tacticalGreen">Start Streaming</Button>
                 </Tooltip>
                 <Table.ScrollContainer minWidth="100%">
                     <Table 
@@ -270,7 +271,7 @@ export default function VideoStreams() {
                         }}
                     />
                 </Table.ScrollContainer>
-                <Center><Pagination total={totalPages} value={activePage} onChange={setPage} withEdges /></Center>
+                <Center><Pagination total={totalPages} value={activePage} onChange={setPage} withEdges color="tacticalCyan" /></Center>
             </Paper>
             <Modal 
                 opened={addVideoOpened} 
@@ -289,7 +290,7 @@ export default function VideoStreams() {
             >
                 <TextInput required label={t("Path")} onChange={e => { setPath(e.target.value); }} />
                 <TextInput label={t("Source")} onChange={e => { setSource(e.target.value); }} mb="md" />
-                <Button onClick={(e) => { addVideo(e); }}>{t("Add Video Stream")}</Button>
+                <Button onClick={(e) => { addVideo(e); }} color="tacticalCyan" variant="filled">{t("Add Video Stream")}</Button>
             </Modal>
             <Modal 
                 opened={deleteVideoOpened} 

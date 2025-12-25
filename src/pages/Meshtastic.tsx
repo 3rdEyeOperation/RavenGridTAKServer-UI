@@ -175,7 +175,7 @@ export default function Meshtastic() {
                         const lora_sx126x_rx_boosted_gain = row.lora_sx126x_rx_boosted_gain ? <IconCheck color="green" /> : <IconX color="red" />;
                         const url = <CopyButton value={row.url}>{({ copied, copy }) => (
                                                 <Tooltip label={row.url}>
-                                                    <Button color={copied ? 'teal' : 'blue'} onClick={copy}>
+                                                    <Button color={copied ? 'tacticalGreen' : 'tacticalCyan'} onClick={copy}>
                                                         {copied ? t('Copied URL') : t('Copy URL')}
                                                     </Button>
                                                 </Tooltip>

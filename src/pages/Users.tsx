@@ -72,6 +72,7 @@ export default function Users() {
                             setUsername(row.username);
                         }}
                           rightSection={<IconPassword />}
+                          color="tacticalBlue"
                         >Reset Password</Button>;
 
                         const user_profile_link = <Link to={`/profile/${row.username}`}>{row.username}</Link>
@@ -84,10 +85,11 @@ export default function Users() {
                                 getMemberships(row.username);
                                 setUsername(row.username);
                             }}
+                            color="tacticalCyan"
                         >Manage Groups</Button>;
 
                         const delete_user_button = <Button
-                            color='red'
+                            color='tacticalRed'
                           disabled={row.username === localStorage.getItem('username')}
                             rightSection={<IconUserMinus />}
                           onClick={() => {

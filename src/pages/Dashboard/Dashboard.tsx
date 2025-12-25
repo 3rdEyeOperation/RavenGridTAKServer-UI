@@ -211,17 +211,17 @@ export default function Dashboard() {
             </Center>
 
             {/* Active EUDs Overview */}
-            <Center mb="xl">
-                <Paper shadow="xl" withBorder radius="md" p="xl" style={{ 
+            <Center mb="xl" className="tactical-section">
+                <Paper shadow="xl" withBorder radius="md" p="xl" className="tactical-paper border-glow" style={{ 
                     width: '90%', 
                     backgroundColor: 'rgba(15, 23, 42, 0.7)',
                     border: '1px solid rgba(100, 255, 218, 0.3)',
                     backdropFilter: 'blur(10px)'
                 }}>
-                    <Title order={3} mb="md" style={{ color: '#64ffda', textTransform: 'uppercase', letterSpacing: '1px' }}>{t('Network Status')}</Title>
+                    <Title order={3} mb="md" className="text-glow-cyan" style={{ textTransform: 'uppercase', letterSpacing: '1px' }}>{t('Network Status')}</Title>
                     <Grid>
-                        <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-                            <Paper withBorder p="xl" radius="md" style={{ 
+                        <Grid.Col span={{ base: 12, sm: 6, md: 4 }} className="stagger-item">
+                            <Paper withBorder p="xl" radius="md" className={alerts.online_euds > 0 ? "tactical-card status-active" : "tactical-card"} style={{ 
                                 backgroundColor: alerts.online_euds > 0 ? 'rgba(100, 255, 218, 0.1)' : 'rgba(15, 23, 42, 0.5)',
                                 border: alerts.online_euds > 0 ? '2px solid rgba(100, 255, 218, 0.5)' : '1px solid rgba(100, 255, 218, 0.2)',
                                 transition: 'all 0.3s ease'
@@ -231,7 +231,10 @@ export default function Dashboard() {
                                         size={60}
                                         radius="md" 
                                         color={alerts.online_euds > 0 ? 'tacticalCyan' : 'gray'}
-                                        style={{ backgroundColor: 'rgba(100, 255, 218, 0.2)' }}
+                                        style={{ 
+                                            backgroundColor: 'rgba(100, 255, 218, 0.2)',
+                                            boxShadow: alerts.online_euds > 0 ? '0 0 20px rgba(100, 255, 218, 0.4)' : 'none'
+                                        }}
                                     >
                                         <IconUsers size={40} />
                                     </ThemeIcon>
@@ -239,7 +242,7 @@ export default function Dashboard() {
                                 <Center mt="md">
                                     <div>
                                         <Text size="xs" c="dimmed" ta="center" style={{ color: '#8892a0', textTransform: 'uppercase', letterSpacing: '1px' }}>{t('Online EUDs')}</Text>
-                                        <Text size="48px" fw={700} ta="center" style={{ 
+                                        <Text size="48px" fw={700} ta="center" className={alerts.online_euds > 0 ? "text-glow-cyan data-update" : "data-update"} style={{ 
                                             color: alerts.online_euds > 0 ? '#64ffda' : '#4a5568',
                                             fontFamily: '"JetBrains Mono", monospace'
                                         }}>
@@ -249,8 +252,8 @@ export default function Dashboard() {
                                 </Center>
                             </Paper>
                         </Grid.Col>
-                        <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-                            <Paper withBorder p="xl" radius="md" style={{ 
+                        <Grid.Col span={{ base: 12, sm: 6, md: 4 }} className="stagger-item">
+                            <Paper withBorder p="xl" radius="md" className="tactical-card" style={{ 
                                 backgroundColor: 'rgba(15, 23, 42, 0.5)',
                                 border: '1px solid rgba(26, 127, 255, 0.3)'
                             }}>
@@ -259,7 +262,10 @@ export default function Dashboard() {
                                         size={60}
                                         radius="md" 
                                         color="tacticalBlue"
-                                        style={{ backgroundColor: 'rgba(26, 127, 255, 0.2)' }}
+                                        style={{ 
+                                            backgroundColor: 'rgba(26, 127, 255, 0.2)',
+                                            boxShadow: '0 0 15px rgba(26, 127, 255, 0.3)'
+                                        }}
                                     >
                                         <IconServer size={40} />
                                     </ThemeIcon>
@@ -275,8 +281,8 @@ export default function Dashboard() {
                                 </Center>
                             </Paper>
                         </Grid.Col>
-                        <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-                            <Paper withBorder p="xl" radius="md" style={{ 
+                        <Grid.Col span={{ base: 12, sm: 6, md: 4 }} className="stagger-item">
+                            <Paper withBorder p="xl" radius="md" className="tactical-card status-online" style={{ 
                                 backgroundColor: 'rgba(15, 23, 42, 0.5)',
                                 border: '1px solid rgba(0, 227, 138, 0.3)'
                             }}>
@@ -285,7 +291,10 @@ export default function Dashboard() {
                                         size={60}
                                         radius="md" 
                                         color="tacticalGreen"
-                                        style={{ backgroundColor: 'rgba(0, 227, 138, 0.2)' }}
+                                        style={{ 
+                                            backgroundColor: 'rgba(0, 227, 138, 0.2)',
+                                            boxShadow: '0 0 20px rgba(0, 227, 138, 0.4)'
+                                        }}
                                     >
                                         <IconRouter size={40} />
                                     </ThemeIcon>
@@ -293,7 +302,7 @@ export default function Dashboard() {
                                 <Center mt="md">
                                     <div>
                                         <Text size="xs" c="dimmed" ta="center" style={{ color: '#8892a0', textTransform: 'uppercase', letterSpacing: '1px' }}>{t('System Status')}</Text>
-                                        <Text size="lg" fw={700} ta="center" style={{ color: '#64ffda' }}>
+                                        <Text size="lg" fw={700} ta="center" className="text-glow-green" style={{ color: '#00e38a' }}>
                                             {t('Online')}
                                         </Text>
                                         <Text size="xs" ta="center" style={{ color: '#8892a0', fontFamily: '"JetBrains Mono", monospace' }}>{formatDuration(intervalToDuration({ start: 0, end: uptime.uptime * 1000 }))}</Text>
@@ -306,17 +315,18 @@ export default function Dashboard() {
             </Center>
 
             {/* System Resources */}
-            <Center>
-                <Title mb="xl" order={2} style={{ color: '#64ffda', textTransform: 'uppercase', letterSpacing: '2px', fontWeight: 700 }}>{t('System Resources')}</Title>
+            <Center className="tactical-section">
+                <Title mb="xl" order={2} className="text-glow-cyan" style={{ textTransform: 'uppercase', letterSpacing: '2px', fontWeight: 700 }}>{t('System Resources')}</Title>
             </Center>
             <Center mb="xl">
                 <Flex direction={{ base: 'column', xs: 'row' }}>
-                    <Paper withBorder shadow="xl" radius="md" p="xl" mr="md" mb="md" style={{
+                    <Paper withBorder shadow="xl" radius="md" p="xl" mr="md" mb="md" className={`tactical-card ${serverStatus.cpu_percent > 80 ? 'mission-critical' : ''}`} style={{
                         backgroundColor: 'rgba(15, 23, 42, 0.7)',
-                        border: `2px solid ${serverStatus.cpu_percent > 80 ? 'rgba(239, 68, 68, 0.5)' : serverStatus.cpu_percent > 60 ? 'rgba(251, 191, 36, 0.5)' : 'rgba(100, 255, 218, 0.3)'}`,
-                        backdropFilter: 'blur(10px)'
+                        border: `2px solid ${serverStatus.cpu_percent > 80 ? 'rgba(255, 71, 71, 0.5)' : serverStatus.cpu_percent > 60 ? 'rgba(255, 151, 33, 0.5)' : 'rgba(100, 255, 218, 0.3)'}`,
+                        backdropFilter: 'blur(10px)',
+                        boxShadow: serverStatus.cpu_percent > 80 ? '0 0 30px rgba(255, 71, 71, 0.3)' : 'none'
                     }}>
-                        <Center mb="md"><Title order={4} style={{ color: '#64ffda', textTransform: 'uppercase', letterSpacing: '1px' }}>{t('CPU Usage')}</Title></Center>
+                        <Center mb="md"><Title order={4} className="text-glow-cyan" style={{ textTransform: 'uppercase', letterSpacing: '1px' }}>{t('CPU Usage')}</Title></Center>
                         <Center>
                             <RingProgress
                                 size={180}
