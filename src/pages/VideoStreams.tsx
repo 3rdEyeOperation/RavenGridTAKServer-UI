@@ -10,7 +10,7 @@ import {
     TextInput,
     Tooltip,
     useComputedColorScheme,
-    Image, LoadingOverlay
+    Image, LoadingOverlay, Paper
 } from '@mantine/core';
 import React, { useEffect, useState } from 'react';
 import { IconCheck, IconCircleMinus, IconPlus, IconVideo, IconX } from '@tabler/icons-react';
