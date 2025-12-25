@@ -46,7 +46,7 @@ export default function Map() {
     const [linePoints, setLinePoints] = useState<L.LatLng[]>([]);
     const [polygonPoints, setPolygonPoints] = useState<L.LatLng[]>([]);
     const [drawMode, setDrawMode] = useState<'none' | 'marker' | 'circle' | 'line' | 'polygon' | 'rectangle' | 'hostile' | 'friendly' | 'waypoint' | 'alert' | 'casevac'>('none');
-    const [showTrails, setShowTrails] = useState(false);
+    const [showADSB, setShowADSB] = useState(true);
     const [mapStyle, setMapStyle] = useState<'satellite' | 'terrain' | 'dark' | 'tactical'>('satellite');
     const [currentCoords, setCurrentCoords] = useState<{ lat: number; lng: number } | null>(null);
     const [coordinateFormat, setCoordinateFormat] = useState<'DD' | 'DMS' | 'MGRS'>('DD');
@@ -827,6 +827,31 @@ export default function Map() {
             };
         }, [map]);
 
+        // Handle ADS-B toggle - show/hide aircraft markers
+        useEffect(() => {
+            if (!mapRef.current) return;
+            
+            Object.entries(markers).forEach(([uid, marker]) => {
+                // Check if this marker is an ADS-B aircraft
+                // We can identify it by checking if it has mil_std_2525c with Air battle dimension
+                const markerElement = marker.getElement();
+                const isADSB = markerElement?.querySelector('svg')?.innerHTML?.includes('air') || 
+                               uid.startsWith('ICAO-'); // Common ADS-B UID pattern
+                
+                if (isADSB) {
+                    if (showADSB) {
+                        if (!mapRef.current.hasLayer(marker)) {
+                            marker.addTo(markersLayer);
+                        }
+                    } else {
+                        if (mapRef.current.hasLayer(marker)) {
+                            mapRef.current.removeLayer(marker);
+                        }
+                    }
+                }
+            });
+        }, [showADSB]);
+
         useEffect(() => {
             map.addLayer(eudsLayer);
             map.addLayer(rbLinesLayer);
@@ -998,12 +1023,32 @@ export default function Map() {
                         }));
                     }
 
+                    // Check if this is an ADS-B aircraft (battle_dimension === 'A' for Air)
+                    const isADSB = value.battle_dimension === 'A' || 
+                                   (value.type && value.type.includes('-A-'));
+                    
                     if (Object.hasOwn(markers, uid)) {
                         // @ts-expect-error trust me bro
                         markers[uid].slideTo([value.point.latitude, value.point.longitude],
                             { duration: 2000, keepAtCenter: false });
+                        
+                        // Show/hide based on ADS-B toggle
+                        if (isADSB) {
+                            if (showADSB) {
+                                if (!map.hasLayer(markers[uid])) {
+                                    markers[uid].addTo(markersLayer);
+                                }
+                            } else {
+                                if (map.hasLayer(markers[uid])) {
+                                    map.removeLayer(markers[uid]);
+                                }
+                            }
+                        }
                     } else {
-                        marker.addTo(markersLayer);
+                        // Only add to map if it's not ADS-B or if ADS-B toggle is on
+                        if (!isADSB || showADSB) {
+                            marker.addTo(markersLayer);
+                        }
                     }
                     markers[uid] = marker;
                     setMarkers(markers);
@@ -1393,11 +1438,11 @@ export default function Map() {
                     <Divider color="rgba(100, 255, 218, 0.3)" />
 
                     <Group gap="xs" align="center" justify="space-between">
-                        <Text size="xs" c="dimmed">Track History:</Text>
+                        <Text size="xs" c="dimmed">ADS-B Aircraft:</Text>
                         <Switch 
                             size="xs"
-                            checked={showTrails}
-                            onChange={(e) => setShowTrails(e.currentTarget.checked)}
+                            checked={showADSB}
+                            onChange={(e) => setShowADSB(e.currentTarget.checked)}
                             color="tacticalCyan"
                         />
                     </Group>
