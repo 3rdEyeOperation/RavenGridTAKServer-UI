@@ -236,40 +236,42 @@ export default function VideoStreams() {
     }
 
     return (
-        <Paper
-            p="xl"
-            style={{
-                backgroundColor: 'rgba(15, 23, 42, 0.7)',
-                backdropFilter: 'blur(10px)',
-                border: '1px solid rgba(100, 255, 218, 0.2)',
-            }}
-        >
-            <LoadingOverlay visible={loading} zIndex={1000} overlayProps={{ radius: "sm", blur: 2, fixed: true }} />
-
-            <Button onClick={() => { setAddVideoOpened(true); }} mb="md" mr="md" leftSection={<IconPlus size={14} />}>Add Video</Button>
-            <Tooltip
-              multiline
-              w={220}
-              withArrow
-              label={t("Start streaming in the browser using your device's camera")}
+        <>
+            <Paper
+                p="xl"
+                style={{
+                    backgroundColor: 'rgba(15, 23, 42, 0.7)',
+                    backdropFilter: 'blur(10px)',
+                    border: '1px solid rgba(100, 255, 218, 0.2)',
+                }}
             >
-                <Button onClick={() => { startStreaming(); }} mb="md" leftSection={<IconVideo size={14} />}>Start Streaming</Button>
-            </Tooltip>
-            <Table.ScrollContainer minWidth="100%">
-                <Table 
-                    stripedColor="rgba(100, 255, 218, 0.05)" 
-                    highlightOnHoverColor="rgba(100, 255, 218, 0.1)" 
-                    striped="odd" 
-                    data={videoStreams} 
-                    highlightOnHover 
-                    withTableBorder 
-                    mb="md"
-                    style={{
-                        border: '1px solid rgba(100, 255, 218, 0.2)',
-                    }}
-                />
-            </Table.ScrollContainer>
-            <Center><Pagination total={totalPages} value={activePage} onChange={setPage} withEdges /></Center>
+                <LoadingOverlay visible={loading} zIndex={1000} overlayProps={{ radius: "sm", blur: 2, fixed: true }} />
+
+                <Button onClick={() => { setAddVideoOpened(true); }} mb="md" mr="md" leftSection={<IconPlus size={14} />}>Add Video</Button>
+                <Tooltip
+                  multiline
+                  w={220}
+                  withArrow
+                  label={t("Start streaming in the browser using your device's camera")}
+                >
+                    <Button onClick={() => { startStreaming(); }} mb="md" leftSection={<IconVideo size={14} />}>Start Streaming</Button>
+                </Tooltip>
+                <Table.ScrollContainer minWidth="100%">
+                    <Table 
+                        stripedColor="rgba(100, 255, 218, 0.05)" 
+                        highlightOnHoverColor="rgba(100, 255, 218, 0.1)" 
+                        striped="odd" 
+                        data={videoStreams} 
+                        highlightOnHover 
+                        withTableBorder 
+                        mb="md"
+                        style={{
+                            border: '1px solid rgba(100, 255, 218, 0.2)',
+                        }}
+                    />
+                </Table.ScrollContainer>
+                <Center><Pagination total={totalPages} value={activePage} onChange={setPage} withEdges /></Center>
+            </Paper>
             <Modal 
                 opened={addVideoOpened} 
                 onClose={() => setAddVideoOpened(false)} 
@@ -289,7 +291,21 @@ export default function VideoStreams() {
                 <TextInput label={t("Source")} onChange={e => { setSource(e.target.value); }} mb="md" />
                 <Button onClick={(e) => { addVideo(e); }}>{t("Add Video Stream")}</Button>
             </Modal>
-            <Modal opened={deleteVideoOpened} onClose={() => setDeleteVideoOpened(false)} title={t(`Are you sure you want to delete ${deletePath}?`)}>
+            <Modal 
+                opened={deleteVideoOpened} 
+                onClose={() => setDeleteVideoOpened(false)} 
+                title={t(`Are you sure you want to delete ${deletePath}?`)}
+                styles={{
+                    content: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                        border: '1px solid rgba(100, 255, 218, 0.3)',
+                    },
+                    header: {
+                        backgroundColor: 'rgba(10, 14, 20, 0.95)',
+                        borderBottom: '1px solid rgba(100, 255, 218, 0.3)',
+                    },
+                }}
+            >
                 <Center>
                     <Button
                       mr="md"
@@ -302,27 +318,42 @@ export default function VideoStreams() {
                     <Button onClick={() => setDeleteVideoOpened(false)}>No</Button>
                 </Center>
             </Modal>
-            <Modal opened={thumbnailOpened} onClose={() => setThumbnailOpened(false)} title={t("Thumbnail")} size="xl">
+            <Modal 
+                opened={thumbnailOpened} 
+                onClose={() => setThumbnailOpened(false)} 
+                title={t("Thumbnail")} 
+                size="xl"
+                styles={{
+                    content: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                        border: '1px solid rgba(100, 255, 218, 0.3)',
+                    },
+                    header: {
+                        backgroundColor: 'rgba(10, 14, 20, 0.95)',
+                        borderBottom: '1px solid rgba(100, 255, 218, 0.3)',
+                    },
+                }}
+            >
                 <Image src={thumbnail} />
             </Modal>
 
-                    <AspectRatio ratio={16 / 9} display={showVideo ? 'block' : 'none'} h="100%" mb="xl" mt="md">
-                        <iframe
-                            src={videoUrl}
-                            title={path}
-                            style={{border: 0}}
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowFullScreen
-                        />
-                        <Button
-                            fullWidth
-                            onClick={() => {
-                                setShowVideo(false);
-                                setVideoUrl('');
-                            }}
+            <AspectRatio ratio={16 / 9} display={showVideo ? 'block' : 'none'} h="100%" mb="xl" mt="md">
+                <iframe
+                    src={videoUrl}
+                    title={path}
+                    style={{border: 0}}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                />
+                <Button
+                    fullWidth
+                    onClick={() => {
+                        setShowVideo(false);
+                        setVideoUrl('');
+                    }}
 
-                        >{t("Close Stream")}</Button>
-                    </AspectRatio>
-        </Paper>
+                >{t("Close Stream")}</Button>
+            </AspectRatio>
+        </>
 );
 }
