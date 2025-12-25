@@ -101,26 +101,27 @@ export function DefaultLayout() {
             }}
           padding="md"
         >
-            <AppShell.Header pb={0} bg={computedColorScheme === 'light' ? '#2a2d43' : 'dark.8'}>
+            <AppShell.Header pb={0} bg={computedColorScheme === 'light' ? 'rgba(10, 14, 20, 0.95)' : 'dark.8'} style={{ borderBottom: '1px solid rgba(100, 255, 218, 0.2)' }}>
                 <Group justify="space-between" pr={5} h="100%">
                     <Group h="100%" w={300}>
-                        <Burger opened={mobileOpened} onClick={toggleMobile} hiddenFrom="sm" size="sm" pl={5} color="white" />
-                        <Burger opened={desktopOpened} onClick={toggleDesktop} visibleFrom="sm" size="sm" color="white" />
+                        <Burger opened={mobileOpened} onClick={toggleMobile} hiddenFrom="sm" size="sm" pl={5} color="cyan" />
+                        <Burger opened={desktopOpened} onClick={toggleDesktop} visibleFrom="sm" size="sm" color="cyan" />
                         <Image src={Logo} h={50} w="auto" />
                     </Group>
                     <Group>
                         <Menu shadow="md" width={200} trigger="click-hover">
                             <Menu.Target>
-                                <Badge autoContrast variant="light" size="md">
+                                <Badge autoContrast variant="light" size="md" color="tacticalCyan" style={{ cursor: 'pointer' }}>
                                     {localStorage.getItem('username')}
                                 </Badge>
                             </Menu.Target>
 
-                            <Menu.Dropdown>
-                                <Menu.Label>OpenTAKServer</Menu.Label>
-                                <Menu.Divider />
+                            <Menu.Dropdown style={{ backgroundColor: 'rgba(15, 23, 42, 0.95)', border: '1px solid rgba(100, 255, 218, 0.3)' }}>
+                                <Menu.Label style={{ color: '#64ffda' }}>RavenGrid TAK Server</Menu.Label>
+                                <Menu.Divider style={{ borderColor: 'rgba(100, 255, 218, 0.2)' }} />
                                 <Menu.Item
-                                    leftSection={<IconUser size={14} />} onClick={() => {navigate('/profile')}}>
+                                    leftSection={<IconUser size={14} />} onClick={() => {navigate('/profile')}}
+                                    style={{ color: '#e8eaed' }}>
                                     {t("Profile")}
                                 </Menu.Item>
                                 <Menu.Item
@@ -129,6 +130,7 @@ export function DefaultLayout() {
                                   onClick={() => {
                                         logout();
                                     }}
+                                  style={{ color: '#e8eaed' }}
                                 >
                                     {t("Log Out")}
                                 </Menu.Item>
@@ -137,10 +139,12 @@ export function DefaultLayout() {
                     </Group>
                 </Group>
             </AppShell.Header>
-            <AppShell.Navbar pl="md" pr="md" bg={computedColorScheme === 'light' ? '#f1f4f8' : 'dark.8'}>
+            <AppShell.Navbar pl="md" pr="md" bg={computedColorScheme === 'light' ? 'rgba(10, 14, 20, 0.95)' : 'dark.8'} style={{ borderRight: '1px solid rgba(100, 255, 218, 0.2)' }}>
                 <Navbar />
             </AppShell.Navbar>
-            <AppShell.Main bg={computedColorScheme === 'light' ? 'gray.1' : 'dark.7'}><AppContent /></AppShell.Main>
+            <AppShell.Main bg={computedColorScheme === 'light' ? 'rgba(15, 23, 42, 1)' : 'dark.7'} style={{ 
+                backgroundImage: 'radial-gradient(circle at 25% 25%, rgba(100, 255, 218, 0.05) 0%, transparent 50%)',
+            }}><AppContent /></AppShell.Main>
         </AppShell>
     );
 }
