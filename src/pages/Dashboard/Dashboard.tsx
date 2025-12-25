@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { notifications } from '@mantine/notifications';
-import {Text, Center, Title, Divider, Paper, Flex, Switch, Space, ScrollArea} from '@mantine/core';
-import { IconCheck, IconX } from '@tabler/icons-react';
+import {Text, Center, Title, Divider, Paper, Flex, Switch, Space, ScrollArea, Badge, Grid, Group, RingProgress, ThemeIcon} from '@mantine/core';
+import { IconCheck, IconX, IconAlertTriangle, IconCircleCheck, IconUsers, IconServer, IconRouter } from '@tabler/icons-react';
 import { DonutChart } from '@mantine/charts';
 import { parseISO, intervalToDuration, formatDuration } from 'date-fns';
 import { versions } from '../../_versions';
@@ -9,6 +9,7 @@ import axios from '../../axios_config';
 import { apiRoutes } from '../../apiRoutes';
 import bytes_formatter from '../../bytes_formatter';
 import '@mantine/charts/styles.css';
+import {t} from "i18next";
 
 export default function Dashboard() {
     const [tcpEnabled, setTcpEnabled] = useState(true);
@@ -107,89 +108,266 @@ export default function Dashboard() {
     return (
         <ScrollArea>
             <Center>
-                <Title mb="xl" order={2}>Server Status</Title>
+                <Title mb="xl" order={2}>{t('Situation Awareness Dashboard')}</Title>
+            </Center>
+
+            {/* Service Status Overview */}
+            <Center mb="xl">
+                <Paper shadow="xl" withBorder radius="md" p="xl" style={{ width: '90%' }}>
+                    <Title order={3} mb="md">{t('Service Status')}</Title>
+                    <Grid>
+                        <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+                            <Paper withBorder p="md" radius="md">
+                                <Group>
+                                    <ThemeIcon 
+                                        size="xl" 
+                                        radius="md" 
+                                        color={alerts.cot_router ? 'green' : 'red'}
+                                    >
+                                        {alerts.cot_router ? <IconCircleCheck size={28} /> : <IconX size={28} />}
+                                    </ThemeIcon>
+                                    <div>
+                                        <Text size="xs" color="dimmed">{t('CoT Router')}</Text>
+                                        <Text size="lg" fw={700}>
+                                            {alerts.cot_router ? t('Online') : t('Offline')}
+                                        </Text>
+                                    </div>
+                                </Group>
+                            </Paper>
+                        </Grid.Col>
+                        <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+                            <Paper withBorder p="md" radius="md">
+                                <Group>
+                                    <ThemeIcon 
+                                        size="xl" 
+                                        radius="md" 
+                                        color={alerts.tcp ? 'green' : 'red'}
+                                    >
+                                        {alerts.tcp ? <IconCircleCheck size={28} /> : <IconX size={28} />}
+                                    </ThemeIcon>
+                                    <div>
+                                        <Text size="xs" color="dimmed">{t('TCP Service')}</Text>
+                                        <Text size="lg" fw={700}>
+                                            {alerts.tcp ? t('Running') : t('Stopped')}
+                                        </Text>
+                                    </div>
+                                </Group>
+                            </Paper>
+                        </Grid.Col>
+                        <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+                            <Paper withBorder p="md" radius="md">
+                                <Group>
+                                    <ThemeIcon 
+                                        size="xl" 
+                                        radius="md" 
+                                        color={alerts.ssl ? 'green' : 'red'}
+                                    >
+                                        {alerts.ssl ? <IconCircleCheck size={28} /> : <IconX size={28} />}
+                                    </ThemeIcon>
+                                    <div>
+                                        <Text size="xs" color="dimmed">{t('SSL Service')}</Text>
+                                        <Text size="lg" fw={700}>
+                                            {alerts.ssl ? t('Running') : t('Stopped')}
+                                        </Text>
+                                    </div>
+                                </Group>
+                            </Paper>
+                        </Grid.Col>
+                        <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+                            <Paper withBorder p="md" radius="md" style={{ backgroundColor: alerts.online_euds > 0 ? 'rgba(64, 192, 87, 0.1)' : 'inherit' }}>
+                                <Group>
+                                    <ThemeIcon 
+                                        size="xl" 
+                                        radius="md" 
+                                        color={alerts.online_euds > 0 ? 'green' : 'gray'}
+                                    >
+                                        <IconUsers size={28} />
+                                    </ThemeIcon>
+                                    <div>
+                                        <Text size="xs" color="dimmed">{t('Online EUDs')}</Text>
+                                        <Text size="xl" fw={700} color={alerts.online_euds > 0 ? 'green' : 'dimmed'}>
+                                            {alerts.online_euds}
+                                        </Text>
+                                    </div>
+                                </Group>
+                            </Paper>
+                        </Grid.Col>
+                    </Grid>
+                </Paper>
+            </Center>
+
+            {/* System Resources */}
+            <Center>
+                <Title mb="xl" order={2}>{t('System Resources')}</Title>
             </Center>
             <Center mb="xl">
                 <Flex direction={{ base: 'column', xs: 'row' }}>
                     <Paper withBorder shadow="xl" radius="md" p="xl" mr="md" mb="md">
-                        <Center mb="md"><Title order={4}>CPU Usage</Title></Center>
+                        <Center mb="md"><Title order={4}>{t('CPU Usage')}</Title></Center>
                         <Center>
-                            <DonutChart
-                              data={[
-                                    { name: 'Used Percentage', value: serverStatus.cpu_percent, color: 'blue' },
-                                    { name: 'Idle Percentage', value: 100 - serverStatus.cpu_percent, color: 'gray.6' },
+                            <RingProgress
+                                size={180}
+                                thickness={16}
+                                sections={[
+                                    { value: serverStatus.cpu_percent, color: serverStatus.cpu_percent > 80 ? 'red' : serverStatus.cpu_percent > 60 ? 'yellow' : 'blue' }
                                 ]}
+                                label={
+                                    <Center>
+                                        <div>
+                                            <Text fw={700} size="xl" ta="center">
+                                                {serverStatus.cpu_percent.toFixed(1)}%
+                                            </Text>
+                                            <Text size="xs" ta="center" c="dimmed">
+                                                {t('Used')}
+                                            </Text>
+                                        </div>
+                                    </Center>
+                                }
                             />
                         </Center>
-                        <Center><Text fw={700} size="md" c="green.9">{`${serverStatus.cpu_percent}%`}</Text></Center>
                     </Paper>
                     <Paper withBorder shadow="xl" radius="md" p="xl" mr="md" mb="md">
-                        <Center mb="md"><Title order={4}>Disk Usage</Title></Center>
+                        <Center mb="md"><Title order={4}>{t('Disk Usage')}</Title></Center>
                         <Center>
-                            <DonutChart
-                              data={[
-                                    { name: 'Used Percentage', value: disk.percent, color: 'blue' },
-                                    { name: 'Free Percentage', value: 100 - disk.percent, color: 'gray.6' },
+                            <RingProgress
+                                size={180}
+                                thickness={16}
+                                sections={[
+                                    { value: disk.percent, color: disk.percent > 80 ? 'red' : disk.percent > 60 ? 'yellow' : 'blue' }
                                 ]}
+                                label={
+                                    <Center>
+                                        <div>
+                                            <Text fw={700} size="xl" ta="center">
+                                                {disk.percent.toFixed(1)}%
+                                            </Text>
+                                            <Text size="xs" ta="center" c="dimmed">
+                                                {t('Used')}
+                                            </Text>
+                                        </div>
+                                    </Center>
+                                }
                             />
                         </Center>
-                        <Center><Text fw={700} size="md" c="green.9">Total Space: {`${bytes_formatter(disk.total)}`}</Text></Center>
-                        <Center><Text fw={700} size="md" c="green.9">Used Space: {`${bytes_formatter(disk.used)}`}</Text></Center>
+                        <Center><Text fw={500} size="sm" c="dimmed">{t('Total')}: {`${bytes_formatter(disk.total)}`}</Text></Center>
+                        <Center><Text fw={500} size="sm" c="dimmed">{t('Used')}: {`${bytes_formatter(disk.used)}`}</Text></Center>
+                        <Center><Text fw={500} size="sm" c="green">{t('Free')}: {`${bytes_formatter(disk.free)}`}</Text></Center>
                     </Paper>
                     <Paper withBorder shadow="xl" radius="md" p="xl" mr="md" mb="md">
-                        <Center mb="md"><Title order={4}>Memory Usage</Title></Center>
+                        <Center mb="md"><Title order={4}>{t('Memory Usage')}</Title></Center>
                         <Center>
-                            <DonutChart
-                              data={[
-                                { name: 'Used Percentage', value: memory.percent, color: 'blue' },
-                                { name: 'Free Percentage', value: 100 - memory.percent, color: 'gray.6' },
-                            ]}
+                            <RingProgress
+                                size={180}
+                                thickness={16}
+                                sections={[
+                                    { value: memory.percent, color: memory.percent > 80 ? 'red' : memory.percent > 60 ? 'yellow' : 'blue' }
+                                ]}
+                                label={
+                                    <Center>
+                                        <div>
+                                            <Text fw={700} size="xl" ta="center">
+                                                {memory.percent.toFixed(1)}%
+                                            </Text>
+                                            <Text size="xs" ta="center" c="dimmed">
+                                                {t('Used')}
+                                            </Text>
+                                        </div>
+                                    </Center>
+                                }
                             />
                         </Center>
-                        <Center><Text fw={700} size="md" c="green.9">Available Memory: {`${bytes_formatter(memory.available)}`}</Text></Center>
-                        <Center><Text fw={700} size="md" c="green.9">Used Memory: {`${bytes_formatter(memory.used)}`}</Text></Center>
+                        <Center><Text fw={500} size="sm" c="dimmed">{t('Total')}: {`${bytes_formatter(memory.total)}`}</Text></Center>
+                        <Center><Text fw={500} size="sm" c="dimmed">{t('Used')}: {`${bytes_formatter(memory.used)}`}</Text></Center>
+                        <Center><Text fw={500} size="sm" c="green">{t('Available')}: {`${bytes_formatter(memory.available)}`}</Text></Center>
                     </Paper>
                     <Paper shadow="xl" withBorder radius="md" p="xl" mr="md" mb="md">
-                        <Center mb="md"><Title order={4}>Uptime</Title></Center>
-                        <Flex><Text fw={700}>Uptime:</Text><Space w="md" /><Text>{formatDuration(intervalToDuration({ start: 0, end: uptime.uptime * 1000 }))}</Text></Flex>
-                        <Flex><Text fw={700}>Boot Time:</Text><Space w="md" />{parseISO(uptime.boot_time).toLocaleString()}</Flex>
+                        <Center mb="md"><Title order={4}>{t('Uptime')}</Title></Center>
+                        <Flex direction="column" gap="xs">
+                            <div>
+                                <Text size="xs" c="dimmed">{t('System Uptime')}</Text>
+                                <Text fw={700} size="lg">{formatDuration(intervalToDuration({ start: 0, end: uptime.uptime * 1000 }))}</Text>
+                            </div>
+                            <div>
+                                <Text size="xs" c="dimmed">{t('Boot Time')}</Text>
+                                <Text fw={500}>{parseISO(uptime.boot_time).toLocaleString()}</Text>
+                            </div>
+                            <Divider my="xs" />
+                            <div>
+                                <Text size="xs" c="dimmed">{t('Server Uptime')}</Text>
+                                <Text fw={700} size="lg" c="green">{formatDuration(intervalToDuration({ start: 0, end: ots.uptime * 1000 }))}</Text>
+                            </div>
+                        </Flex>
                     </Paper>
                 </Flex>
             </Center>
             <Divider my="lg" />
             <Center>
-                <Title mb="xl" order={2}>Server Details</Title>
+                <Title mb="xl" order={2}>{t('Server Details')}</Title>
             </Center>
             <Center mb="xl">
                 <Flex direction={{ base: 'column', xs: 'row' }}>
                     <Paper shadow="xl" withBorder radius="md" p="xl" mr="md" mb="md">
-                        <Center mb="md"><Title order={4}>uname</Title></Center>
-                        <Flex><Text fw={700}>System:</Text><Space w="md" /><Text>{uname.system}</Text></Flex>
-                        <Flex><Text fw={700}>Release:</Text><Space w="md" />{uname.release}</Flex>
-                        <Flex><Text fw={700}>Version:</Text><Space w="md" />{uname.version}</Flex>
-                        <Flex><Text fw={700}>Architecture:</Text><Space w="md" />{uname.machine}</Flex>
-                        <Flex><Text fw={700}>Hostname:</Text><Space w="md" />{uname.node}</Flex>
-                    </Paper>
-                    <Paper shadow="xl" withBorder radius="md" p="xl" mr="md" mb="md">
-                        <Center mb="md"><Title order={4}>OS Release</Title></Center>
-                        <Flex><Text fw={700}>Name:</Text><Space w="md" /><Text>{osRelease.NAME}</Text></Flex>
-                        <Flex><Text fw={700}>Pretty Name:</Text><Space w="md" /><Text>{osRelease.PRETTY_NAME}</Text></Flex>
-                        <Flex><Text fw={700}>Version:</Text><Space w="md" /><Text>{osRelease.VERSION}</Text></Flex>
-                        <Flex><Text fw={700}>Code Name:</Text><Space w="md" /><Text>{osRelease.VERSION_CODENAME}</Text></Flex>
-                    </Paper>
-                    <Paper shadow="xl" withBorder radius="md" p="xl" mr="md" mb="md">
-                        <Center mb="md"><Title order={4}>OpenTAKServer</Title></Center>
-                        <Flex><Text fw={700}>Version:</Text><Space w="md" /><Text>{ots.version}</Text></Flex>
-                        <Flex><Text fw={700}>UI Version:</Text><Space w="md" /><Text>{versions.gitTag}</Text></Flex>
-                        <Flex><Text fw={700}>UI Commit Hash:</Text><Space w="md" /><Text>{versions.gitCommitHash}</Text></Flex>
-                        <Flex><Text fw={700}>UI Commit Date:</Text><Space w="md" /><Text>{parseISO(versions.versionDate).toLocaleString()}</Text></Flex>
-                        <Flex><Text fw={700}>Uptime:</Text><Space w="md" />
-                            <Text>
-                                {formatDuration(intervalToDuration({ start: 0, end: ots.uptime * 1000 }))}
-                            </Text>
+                        <Center mb="md"><Title order={4}>{t('System Info')}</Title></Center>
+                        <Flex direction="column" gap="xs">
+                            <div>
+                                <Text size="xs" c="dimmed">{t('System')}</Text>
+                                <Text fw={500}>{uname.system}</Text>
+                            </div>
+                            <div>
+                                <Text size="xs" c="dimmed">{t('Release')}</Text>
+                                <Text fw={500}>{uname.release}</Text>
+                            </div>
+                            <div>
+                                <Text size="xs" c="dimmed">{t('Architecture')}</Text>
+                                <Text fw={500}>{uname.machine}</Text>
+                            </div>
+                            <div>
+                                <Text size="xs" c="dimmed">{t('Hostname')}</Text>
+                                <Text fw={500}>{uname.node}</Text>
+                            </div>
                         </Flex>
-                        <Flex><Text fw={700}>Start Time:</Text><Space w="md" /><Text>{ots.start_time}</Text></Flex>
-                        <Flex><Text fw={700}>Python Version:</Text><Space w="md" /><Text>{ots.python_version}</Text></Flex>
+                    </Paper>
+                    <Paper shadow="xl" withBorder radius="md" p="xl" mr="md" mb="md">
+                        <Center mb="md"><Title order={4}>{t('OS Release')}</Title></Center>
+                        <Flex direction="column" gap="xs">
+                            <div>
+                                <Text size="xs" c="dimmed">{t('Name')}</Text>
+                                <Text fw={500}>{osRelease.NAME}</Text>
+                            </div>
+                            <div>
+                                <Text size="xs" c="dimmed">{t('Pretty Name')}</Text>
+                                <Text fw={500}>{osRelease.PRETTY_NAME}</Text>
+                            </div>
+                            <div>
+                                <Text size="xs" c="dimmed">{t('Version')}</Text>
+                                <Text fw={500}>{osRelease.VERSION}</Text>
+                            </div>
+                            <div>
+                                <Text size="xs" c="dimmed">{t('Code Name')}</Text>
+                                <Text fw={500}>{osRelease.VERSION_CODENAME}</Text>
+                            </div>
+                        </Flex>
+                    </Paper>
+                    <Paper shadow="xl" withBorder radius="md" p="xl" mr="md" mb="md">
+                        <Center mb="md"><Title order={4}>{t('RavenGrid TAK Server')}</Title></Center>
+                        <Flex direction="column" gap="xs">
+                            <div>
+                                <Text size="xs" c="dimmed">{t('Server Version')}</Text>
+                                <Text fw={700} c="blue">{ots.version}</Text>
+                            </div>
+                            <div>
+                                <Text size="xs" c="dimmed">{t('UI Version')}</Text>
+                                <Text fw={500}>{versions.gitTag}</Text>
+                            </div>
+                            <div>
+                                <Text size="xs" c="dimmed">{t('Python Version')}</Text>
+                                <Text fw={500}>{ots.python_version}</Text>
+                            </div>
+                            <div>
+                                <Text size="xs" c="dimmed">{t('Start Time')}</Text>
+                                <Text fw={500}>{ots.start_time}</Text>
+                            </div>
+                        </Flex>
                     </Paper>
                 </Flex>
             </Center>
