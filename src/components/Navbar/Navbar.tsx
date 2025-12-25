@@ -26,7 +26,7 @@ import {
     IconPlugConnected,
     IconPlug,
     IconCircleMinus,
-    IconUsersGroup, IconLink, IconUser
+    IconUsersGroup, IconLink, IconUser, IconLanguage
 } from '@tabler/icons-react';
 import {
     NavLink,
@@ -38,7 +38,8 @@ import {
     Button,
     Paper,
     Text,
-    Tooltip
+    Tooltip,
+    Select
 } from '@mantine/core';
 import Logo from '../../images/ots-logo.png';
 import { formatISO, parseISO } from 'date-fns';
@@ -52,6 +53,7 @@ import { apiRoutes } from '../../apiRoutes';
 import MeshtasticLogo from './MeshtasticLogo';
 import {DateTimePicker} from "@mantine/dates";
 import {t} from "i18next";
+import { useTranslation } from 'react-i18next';
 
 const navbarLinks = [
     { link: '/dashboard', label: t('Dashboard'), icon: IconDashboard },
@@ -90,6 +92,7 @@ interface ATAKQrCode {
 }
 
 export default function Navbar() {
+    const { i18n } = useTranslation();
     const administrator = localStorage.getItem('administrator') === 'true';
     const location = useLocation();
     const [showItakQr, setShowItakQr] = useState(false);
@@ -110,6 +113,26 @@ export default function Navbar() {
         disabled: false,
         total_uses: 0
     });
+
+    const languageOptions = [
+        { value: 'en', label: 'English' },
+        { value: 'th', label: 'ไทย (Thai)' },
+        { value: 'de', label: 'Deutsch' },
+        { value: 'fr', label: 'Français' },
+        { value: 'es', label: 'Español' },
+        { value: 'pt', label: 'Português' },
+        { value: 'uk', label: 'Українська' },
+        { value: 'da', label: 'Dansk' },
+        { value: 'ko', label: '한국어' },
+        { value: 'pl', label: 'Polski' }
+    ];
+
+    const changeLanguage = (lng: string | null) => {
+        if (lng) {
+            i18n.changeLanguage(lng);
+            localStorage.setItem('language', lng);
+        }
+    };
 
     useEffect(() => {
         get_plugins();
@@ -276,6 +299,17 @@ export default function Navbar() {
                 <NavLink className={classes.link} key="itakQrCode" onClick={() => itak_qr_string()} leftSection={<IconQrcode className={classes.linkIcon} stroke={1.5} />} label={t("iTAK QR Code")} />
                 <NavLink className={classes.link} key="2faSettings" component={Link} to="/tfa_setup" leftSection={<Icon2fa className={classes.linkIcon} stroke={1.5} />} label={t("Setup 2FA")} />
                 <NavLink className={classes.link} key="darkModeSwitch" leftSection={<IconMoonStars className={classes.linkIcon} stroke={1.5} />} rightSection={<DarkModeSwitch />} label={t("Dark Mode")} />
+                <NavLink className={classes.link} key="language" leftSection={<IconLanguage className={classes.linkIcon} stroke={1.5} />} label={t("Language")}>
+                    <Select
+                        data={languageOptions}
+                        value={i18n.language}
+                        onChange={changeLanguage}
+                        placeholder={t("Select language")}
+                        searchable
+                        clearable={false}
+                        styles={{ input: { marginTop: '8px', marginLeft: '8px', marginRight: '8px' } }}
+                    />
+                </NavLink>
                 <NavLink className={classes.link} key="support" leftSection={<IconHelp className={classes.linkIcon} stroke={1.5} />} label={t("Support")} >
                     <NavLink className={classes.link} key="docs" onClick={() => window.open("https://docs.opentakserver.io", "_blank")} leftSection={<IconBook className={classes.linkIcon} stroke={1.5} />} label={t("Documentation")} />
                     <NavLink className={classes.link} key="discord" onClick={() => window.open("https://discord.gg/6uaVHjtfXN", "_blank")} leftSection={<IconBrandDiscord className={classes.linkIcon} stroke={1.5} />} label={t("Discord")} />
