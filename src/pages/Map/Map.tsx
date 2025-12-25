@@ -1,4 +1,4 @@
-import React, { ReactElement, useEffect, useState } from 'react';
+import React, { ReactElement, useEffect, useState, useRef } from 'react';
 import { renderToString } from 'react-dom/server';
 import { LayersControl, MapContainer, ScaleControl, TileLayer, useMap, WMSTileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -6,10 +6,10 @@ import L from 'leaflet';
 import 'react-leaflet-fullscreen/styles.css';
 import 'leaflet.marker.slideto';
 import 'leaflet-rotatedmarker';
-import { Divider, Drawer, Image, Paper, Table, Text, useComputedColorScheme } from '@mantine/core';
+import { Divider, Drawer, Image, Paper, Table, Text, useComputedColorScheme, ActionIcon, Group, Tooltip, Badge, Stack, Switch, SegmentedControl, Button } from '@mantine/core';
 import axios from 'axios';
 import { notifications } from '@mantine/notifications';
-import { IconX } from '@tabler/icons-react';
+import { IconX, IconRuler, IconMapPin, IconCircle, IconRoute, IconCrosshair, IconLayers, Icon3dCubeSphere, IconTarget, IconCurrentLocation } from '@tabler/icons-react';
 import * as milsymbol from 'milsymbol';
 import { useDisclosure } from '@mantine/hooks';
 import GreatCircle from './GreatCircle';
@@ -31,6 +31,12 @@ export default function Map() {
     const [drawerTitle, setDrawerTitle] = useState('');
     const [detailRows, setDetailRows] = useState<ReactElement[]>([]);
     const [positionRows, setPositionRows] = useState<ReactElement[]>([]);
+    const [showToolbar, setShowToolbar] = useState(true);
+    const [measureMode, setMeasureMode] = useState(false);
+    const [drawMode, setDrawMode] = useState<'none' | 'marker' | 'circle' | 'line'>('none');
+    const [showTrails, setShowTrails] = useState(false);
+    const [mapStyle, setMapStyle] = useState<'satellite' | 'terrain' | 'dark' | 'tactical'>('satellite');
+    const mapRef = useRef<L.Map | null>(null);
     const computedColorScheme = useComputedColorScheme('light', { getInitialValueInEffect: true });
 
     const eudsLayer = new L.LayerGroup();
@@ -224,8 +230,12 @@ export default function Map() {
 
     function MapContext() {
         const map = useMap();
-        const fullscreenControl = L.control.fullscreen();
-        map.addControl(fullscreenControl);
+        
+        useEffect(() => {
+            mapRef.current = map;
+            const fullscreenControl = L.control.fullscreen();
+            map.addControl(fullscreenControl);
+        }, [map]);
 
         useEffect(() => {
             map.addLayer(eudsLayer);
@@ -456,6 +466,158 @@ export default function Map() {
 
     return (
         <>
+            {/* Tactical Control Panel */}
+            {showToolbar && (
+                <Paper 
+                    shadow="xl" 
+                    p="md" 
+                    className="tactical-card"
+                    style={{
+                        position: 'fixed',
+                        top: '5.5rem',
+                        left: '280px',
+                        zIndex: 1000,
+                        backgroundColor: 'rgba(10, 14, 20, 0.95)',
+                        border: '1px solid rgba(100, 255, 218, 0.4)',
+                        backdropFilter: 'blur(10px)',
+                        boxShadow: '0 0 30px rgba(100, 255, 218, 0.2)',
+                    }}
+                >
+                    <Stack gap="xs">
+                        <Text size="xs" fw={700} className="text-glow-cyan" style={{ textTransform: 'uppercase', letterSpacing: '1px' }}>
+                            Tactical Tools
+                        </Text>
+                        <Group gap="xs">
+                            <Tooltip label="Measure Distance">
+                                <ActionIcon 
+                                    size="lg" 
+                                    variant={measureMode ? "filled" : "light"}
+                                    color="tacticalCyan"
+                                    onClick={() => setMeasureMode(!measureMode)}
+                                    className={measureMode ? "status-active" : ""}
+                                >
+                                    <IconRuler size={18} />
+                                </ActionIcon>
+                            </Tooltip>
+                            <Tooltip label="Place Marker">
+                                <ActionIcon 
+                                    size="lg" 
+                                    variant={drawMode === 'marker' ? "filled" : "light"}
+                                    color="tacticalCyan"
+                                    onClick={() => setDrawMode(drawMode === 'marker' ? 'none' : 'marker')}
+                                >
+                                    <IconMapPin size={18} />
+                                </ActionIcon>
+                            </Tooltip>
+                            <Tooltip label="Draw Circle">
+                                <ActionIcon 
+                                    size="lg" 
+                                    variant={drawMode === 'circle' ? "filled" : "light"}
+                                    color="tacticalCyan"
+                                    onClick={() => setDrawMode(drawMode === 'circle' ? 'none' : 'circle')}
+                                >
+                                    <IconCircle size={18} />
+                                </ActionIcon>
+                            </Tooltip>
+                            <Tooltip label="Draw Line">
+                                <ActionIcon 
+                                    size="lg" 
+                                    variant={drawMode === 'line' ? "filled" : "light"}
+                                    color="tacticalCyan"
+                                    onClick={() => setDrawMode(drawMode === 'line' ? 'none' : 'line')}
+                                >
+                                    <IconRoute size={18} />
+                                </ActionIcon>
+                            </Tooltip>
+                            <Tooltip label="Center on Position">
+                                <ActionIcon 
+                                    size="lg" 
+                                    variant="light"
+                                    color="tacticalGreen"
+                                    onClick={() => {
+                                        if (mapRef.current) {
+                                            mapRef.current.locate({setView: true, maxZoom: 16});
+                                        }
+                                    }}
+                                >
+                                    <IconCurrentLocation size={18} />
+                                </ActionIcon>
+                            </Tooltip>
+                        </Group>
+                        <Divider color="rgba(100, 255, 218, 0.3)" />
+                        <Group gap="xs" align="center">
+                            <Text size="xs" c="dimmed">Trails:</Text>
+                            <Switch 
+                                size="xs"
+                                checked={showTrails}
+                                onChange={(e) => setShowTrails(e.currentTarget.checked)}
+                                color="tacticalCyan"
+                            />
+                        </Group>
+                        <SegmentedControl
+                            size="xs"
+                            value={mapStyle}
+                            onChange={(value) => setMapStyle(value as any)}
+                            data={[
+                                { label: 'Satellite', value: 'satellite' },
+                                { label: 'Terrain', value: 'terrain' },
+                                { label: 'Dark', value: 'dark' },
+                                { label: 'Tactical', value: 'tactical' }
+                            ]}
+                            color="tacticalCyan"
+                            styles={{
+                                root: {
+                                    backgroundColor: 'rgba(15, 23, 42, 0.8)',
+                                },
+                                label: {
+                                    color: '#e8eaed',
+                                    fontSize: '0.7rem',
+                                    padding: '4px 8px',
+                                }
+                            }}
+                        />
+                    </Stack>
+                </Paper>
+            )}
+
+            {/* Situation Awareness Status Bar */}
+            <Paper 
+                shadow="xl" 
+                p="xs"
+                className="status-active"
+                style={{
+                    position: 'fixed',
+                    top: '5.5rem',
+                    right: '20px',
+                    zIndex: 1000,
+                    backgroundColor: 'rgba(10, 14, 20, 0.95)',
+                    border: '1px solid rgba(100, 255, 218, 0.4)',
+                    backdropFilter: 'blur(10px)',
+                }}
+            >
+                <Group gap="md">
+                    <Badge 
+                        size="lg" 
+                        variant="light" 
+                        color="tacticalGreen"
+                        className="status-online"
+                        leftSection={<IconTarget size={14} />}
+                    >
+                        {Object.keys(markers).length} Contacts
+                    </Badge>
+                    <Tooltip label="Toggle Toolbar">
+                        <ActionIcon 
+                            size="md" 
+                            variant="subtle"
+                            color="tacticalCyan"
+                            onClick={() => setShowToolbar(!showToolbar)}
+                        >
+                            <IconLayers size={18} />
+                        </ActionIcon>
+                    </Tooltip>
+                </Group>
+            </Paper>
+
             <Drawer
               radius="md"
               position="right"
@@ -492,6 +654,7 @@ export default function Map() {
                 radius="md" 
                 p="md" 
                 withBorder
+                className="tactical-card tactical-paper"
                 style={{
                     backgroundColor: 'rgba(15, 23, 42, 0.7)',
                     backdropFilter: 'blur(10px)',
@@ -505,9 +668,30 @@ export default function Map() {
                   style={{ height: 'calc(100vh - 10rem)', width: '100%', zIndex: 90 }}
                 >
                     <MapContext />
-                    <ScaleControl />
+                    <ScaleControl position="bottomleft" />
                     <LayersControl>
-                        <LayersControl.BaseLayer name="OSM" checked>
+                        {/* Dark Tactical Maps */}
+                        <LayersControl.BaseLayer name="Dark Matter (Tactical)" checked={mapStyle === 'dark'}>
+                            <TileLayer
+                              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                              url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                              zIndex={0}
+                              minZoom={0}
+                              maxZoom={20}
+                            />
+                        </LayersControl.BaseLayer>
+                        <LayersControl.BaseLayer name="ESRI Dark Gray Canvas" checked={mapStyle === 'tactical'}>
+                            <TileLayer
+                              attribution='Tiles &copy; Esri'
+                              url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}"
+                              zIndex={0}
+                              minZoom={0}
+                              maxZoom={16}
+                            />
+                        </LayersControl.BaseLayer>
+                        
+                        {/* Standard Maps */}
+                        <LayersControl.BaseLayer name="OSM">
                             <TileLayer
                               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -519,10 +703,10 @@ export default function Map() {
                         <LayersControl.BaseLayer name="Google Streets">
                             <TileLayer url="http://mt0.google.com/vt/lyrs=m&x={x}&y={y}&z={z}" zIndex={0} minZoom={0} maxZoom={20} />
                         </LayersControl.BaseLayer>
-                        <LayersControl.BaseLayer name="Google Hybrid">
+                        <LayersControl.BaseLayer name="Google Hybrid" checked={mapStyle === 'satellite'}>
                             <TileLayer url="http://mt0.google.com/vt/lyrs=y&hl=en&x={x}&y={y}&z={z}&s=Ga" zIndex={0} minZoom={0} maxZoom={20} />
                         </LayersControl.BaseLayer>
-                        <LayersControl.BaseLayer name="Google Terrain">
+                        <LayersControl.BaseLayer name="Google Terrain" checked={mapStyle === 'terrain'}>
                             <TileLayer url="http://mt1.google.com/vt/lyrs=p&amp;x={x}&amp;y={y}&amp;z={z}" zIndex={0} minZoom={0} maxZoom={20} />
                         </LayersControl.BaseLayer>
                         <LayersControl.BaseLayer name="ESRI World Imagery (Clarity) Beta">
@@ -532,14 +716,23 @@ export default function Map() {
                             <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}" minZoom={0} maxZoom={20} />
                         </LayersControl.BaseLayer>
                     </LayersControl>
+                    
+                    {/* Tactical Overlays */}
                     <LayersControl position="topright">
+                        <LayersControl.Overlay name="MGRS Grid Reference">
+                            <TileLayer
+                              url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Reference_Overlay/MapServer/tile/{z}/{y}/{x}"
+                              pane="overlayPane"
+                              opacity={0.6}
+                            />
+                        </LayersControl.Overlay>
                         <LayersControl.Overlay name="Google Street View Coverage">
                             <TileLayer
                               url="https://www.google.com/maps/vt?pb=!1m7!8m6!1m3!1i{z}!2i{x}!3i{y}!2i9!3x1!2m8!1e2!2ssvv!4m2!1scc!2s*211m3*211e2*212b1*213e2*212b1*214b1!4m2!1ssvl!2s*211b0*212b1!3m8!2sen!3sus!5e1105!12m4!1e68!2m2!1sset!2sRoadmap!4e0!5m4!1e0!8m2!1e1!1e1!6m6!1e12!2i2!11e0!39b0!44e0!50e0"
                               pane="overlayPane"
                             />
                         </LayersControl.Overlay>
-                        <LayersControl.Overlay name="Weather">
+                        <LayersControl.Overlay name="Weather Radar">
                             <WMSTileLayer
                               url="http://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r.cgi"
                               params={{

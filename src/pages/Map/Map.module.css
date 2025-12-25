@@ -12,3 +12,174 @@
     filter: brightness(75%);
     fill-opacity: 50%;
 }
+
+/* Tactical Leaflet Controls */
+:global(.leaflet-control-layers) {
+    background: rgba(10, 14, 20, 0.95) !important;
+    border: 1px solid rgba(100, 255, 218, 0.4) !important;
+    border-radius: 8px !important;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 0 20px rgba(100, 255, 218, 0.2) !important;
+}
+
+:global(.leaflet-control-layers-expanded) {
+    padding: 12px !important;
+}
+
+:global(.leaflet-control-layers-toggle) {
+    background-color: rgba(10, 14, 20, 0.95) !important;
+    border: 1px solid rgba(100, 255, 218, 0.4) !important;
+    background-image: none !important;
+    width: 40px !important;
+    height: 40px !important;
+}
+
+:global(.leaflet-control-layers-toggle)::before {
+    content: '⚡';
+    font-size: 20px;
+    color: #64ffda;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+:global(.leaflet-control-fullscreen-button) {
+    background-color: rgba(10, 14, 20, 0.95) !important;
+    border: 1px solid rgba(100, 255, 218, 0.4) !important;
+    background-image: none !important;
+}
+
+:global(.leaflet-control-fullscreen-button)::before {
+    content: '⛶';
+    font-size: 20px;
+    color: #64ffda;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+:global(.leaflet-control-layers label) {
+    color: #e8eaed !important;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 4px 0;
+    display: flex;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+
+:global(.leaflet-control-layers label:hover) {
+    color: #64ffda !important;
+    padding-left: 4px;
+}
+
+:global(.leaflet-control-layers-base label),
+:global(.leaflet-control-layers-overlays label) {
+    margin-bottom: 4px;
+}
+
+:global(.leaflet-control-layers-separator) {
+    border-top: 1px solid rgba(100, 255, 218, 0.3) !important;
+    margin: 8px 0 !important;
+}
+
+:global(.leaflet-bar) {
+    border: 1px solid rgba(100, 255, 218, 0.4) !important;
+    box-shadow: 0 0 15px rgba(100, 255, 218, 0.2) !important;
+    border-radius: 6px !important;
+}
+
+:global(.leaflet-bar a) {
+    background-color: rgba(10, 14, 20, 0.95) !important;
+    border-bottom: 1px solid rgba(100, 255, 218, 0.3) !important;
+    color: #64ffda !important;
+    font-weight: 700;
+    transition: all 0.3s ease;
+}
+
+:global(.leaflet-bar a:hover) {
+    background-color: rgba(100, 255, 218, 0.15) !important;
+    color: #64ffda !important;
+    box-shadow: inset 0 0 15px rgba(100, 255, 218, 0.2);
+}
+
+:global(.leaflet-bar a:first-child) {
+    border-top-left-radius: 6px !important;
+    border-top-right-radius: 6px !important;
+}
+
+:global(.leaflet-bar a:last-child) {
+    border-bottom-left-radius: 6px !important;
+    border-bottom-right-radius: 6px !important;
+    border-bottom: none !important;
+}
+
+:global(.leaflet-control-scale-line) {
+    background: rgba(10, 14, 20, 0.95) !important;
+    border: 2px solid rgba(100, 255, 218, 0.5) !important;
+    border-top: none !important;
+    color: #64ffda !important;
+    font-family: 'JetBrains Mono', monospace !important;
+    font-weight: 700;
+    text-shadow: 0 0 5px rgba(100, 255, 218, 0.5);
+}
+
+/* Tactical Tooltips */
+:global(.leaflet-tooltip) {
+    background: rgba(10, 14, 20, 0.95) !important;
+    border: 1px solid rgba(100, 255, 218, 0.5) !important;
+    color: #64ffda !important;
+    font-weight: 700;
+    font-size: 12px;
+    padding: 6px 10px;
+    border-radius: 4px;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 0 15px rgba(100, 255, 218, 0.3);
+}
+
+:global(.leaflet-tooltip-top)::before {
+    border-top-color: rgba(100, 255, 218, 0.5) !important;
+}
+
+:global(.leaflet-tooltip-bottom)::before {
+    border-bottom-color: rgba(100, 255, 218, 0.5) !important;
+}
+
+:global(.leaflet-tooltip-left)::before {
+    border-left-color: rgba(100, 255, 218, 0.5) !important;
+}
+
+:global(.leaflet-tooltip-right)::before {
+    border-right-color: rgba(100, 255, 218, 0.5) !important;
+}
+
+/* Tactical Popup */
+:global(.leaflet-popup-content-wrapper) {
+    background: rgba(10, 14, 20, 0.95) !important;
+    border: 1px solid rgba(100, 255, 218, 0.4) !important;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 0 30px rgba(100, 255, 218, 0.3) !important;
+    border-radius: 8px;
+}
+
+:global(.leaflet-popup-content) {
+    color: #e8eaed !important;
+    margin: 16px;
+}
+
+:global(.leaflet-popup-tip) {
+    background: rgba(10, 14, 20, 0.95) !important;
+    border: 1px solid rgba(100, 255, 218, 0.4) !important;
+}
+
+:global(.leaflet-popup-close-button) {
+    color: #64ffda !important;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+:global(.leaflet-popup-close-button:hover) {
+    color: #00e38a !important;
+}
