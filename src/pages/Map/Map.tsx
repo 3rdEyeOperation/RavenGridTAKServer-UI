@@ -306,6 +306,45 @@ export default function Map() {
         }
     }, [showHeatmap, heatmapType]);
 
+    // Calculate marker statistics
+    const getMarkerStats = () => {
+        const totalMarkers = Object.keys(markers).length;
+        let friendlyCount = 0;
+        let hostileCount = 0;
+        let unknownCount = 0;
+        let sensorCount = 0;
+        let adsbCount = 0;
+
+        Object.entries(markers).forEach(([uid, marker]) => {
+            const markerElement = marker.getElement();
+            const svgContent = markerElement?.querySelector('svg')?.innerHTML || '';
+            
+            // Count by type
+            if (uid.startsWith('RF-') || uid.includes('SENSOR') || svgContent.includes('sensor')) {
+                sensorCount++;
+            } else if (uid.startsWith('ICAO-') || svgContent.includes('air')) {
+                adsbCount++;
+            } else if (svgContent.includes('friend') || svgContent.includes('f-')) {
+                friendlyCount++;
+            } else if (svgContent.includes('hostile') || svgContent.includes('h-')) {
+                hostileCount++;
+            } else {
+                unknownCount++;
+            }
+        });
+
+        return {
+            total: totalMarkers,
+            friendly: friendlyCount,
+            hostile: hostileCount,
+            unknown: unknownCount,
+            sensors: sensorCount,
+            adsb: adsbCount,
+        };
+    };
+
+    const markerStats = getMarkerStats();
+
     function formatDrawer(eud:any, point:any) {
         const detail_rows:ReactElement[] = [];
         const position_rows:ReactElement[] = [];
@@ -1488,15 +1527,35 @@ export default function Map() {
             >
                 <Stack gap="md" p="md">
                     <Group justify="space-between">
-                        <Badge 
-                            size="lg" 
-                            variant="light" 
-                            color="tacticalGreen"
-                            className="status-online"
-                            leftSection={<IconTarget size={14} />}
-                        >
-                            {Object.keys(markers).length} Contacts
-                        </Badge>
+                        <Stack gap={4}>
+                            <Badge 
+                                size="lg" 
+                                variant="light" 
+                                color="tacticalGreen"
+                                className="status-online"
+                                leftSection={<IconTarget size={14} />}
+                            >
+                                {markerStats.total} Total
+                            </Badge>
+                            <Group gap={4}>
+                                <Badge size="xs" variant="dot" color="tacticalGreen">
+                                    {markerStats.friendly} Friendly
+                                </Badge>
+                                <Badge size="xs" variant="dot" color="tacticalRed">
+                                    {markerStats.hostile} Hostile
+                                </Badge>
+                                {markerStats.sensors > 0 && (
+                                    <Badge size="xs" variant="dot" color="violet">
+                                        {markerStats.sensors} Sensors
+                                    </Badge>
+                                )}
+                                {markerStats.adsb > 0 && (
+                                    <Badge size="xs" variant="dot" color="tacticalCyan">
+                                        {markerStats.adsb} Aircraft
+                                    </Badge>
+                                )}
+                            </Group>
+                        </Stack>
                         <Tooltip label={showSidebar ? "Hide Panel" : "Show Panel"}>
                             <ActionIcon 
                                 size="lg"
@@ -1701,7 +1760,7 @@ export default function Map() {
                                             <Stack gap={4} align="center">
                                                 <IconUsers size={20} color="#4ade80" />
                                                 <Text size="xl" fw={700} c="tacticalGreen">
-                                                    {Math.floor(Object.keys(markers).length * 0.7)}
+                                                    {markerStats.friendly}
                                                 </Text>
                                                 <Text size="xs" c="dimmed">Friendly</Text>
                                             </Stack>
@@ -1712,7 +1771,7 @@ export default function Map() {
                                             <Stack gap={4} align="center">
                                                 <IconTarget size={20} color="#ef4444" />
                                                 <Text size="xl" fw={700} c="tacticalRed">
-                                                    {Math.floor(Object.keys(markers).length * 0.2)}
+                                                    {markerStats.hostile}
                                                 </Text>
                                                 <Text size="xs" c="dimmed">Hostile</Text>
                                             </Stack>
@@ -1723,18 +1782,20 @@ export default function Map() {
                                             <Stack gap={4} align="center">
                                                 <IconAlertTriangle size={20} color="#fbbf24" />
                                                 <Text size="xl" fw={700} c="tacticalOrange">
-                                                    {Math.floor(Object.keys(markers).length * 0.1)}
+                                                    {markerStats.unknown}
                                                 </Text>
                                                 <Text size="xs" c="dimmed">Unknown</Text>
                                             </Stack>
                                         </Paper>
                                     </Grid.Col>
                                     <Grid.Col span={6}>
-                                        <Paper p="xs" style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
+                                        <Paper p="xs" style={{ backgroundColor: 'rgba(139, 92, 246, 0.1)', border: '1px solid rgba(139, 92, 246, 0.3)' }}>
                                             <Stack gap={4} align="center">
-                                                <IconShield size={20} color="#3b82f6" />
-                                                <Text size="xl" fw={700} c="tacticalBlue">85%</Text>
-                                                <Text size="xs" c="dimmed">Readiness</Text>
+                                                <IconActivity size={20} color="#8b5cf6" />
+                                                <Text size="xl" fw={700} style={{ color: '#8b5cf6' }}>
+                                                    {markerStats.sensors}
+                                                </Text>
+                                                <Text size="xs" c="dimmed">RF Sensors</Text>
                                             </Stack>
                                         </Paper>
                                     </Grid.Col>
@@ -1792,8 +1853,15 @@ export default function Map() {
 
                     <Stack gap="xs">
                         <Text size="xs" fw={700} className="text-glow-cyan" style={{ textTransform: 'uppercase', letterSpacing: '1px' }}>
-                            RF Sensor Heatmap
+                            RF Sensors
                         </Text>
+                        <Switch 
+                            label="Show Sensor Markers"
+                            checked={showSensorData}
+                            onChange={(e) => setShowSensorData(e.currentTarget.checked)}
+                            color="tacticalGreen"
+                            description="Display RF sensor icons on map"
+                        />
                         <Switch 
                             label="Show Heatmap"
                             checked={showHeatmap}
@@ -1835,29 +1903,15 @@ export default function Map() {
 
                     <Divider color="rgba(100, 255, 218, 0.3)" />
 
-                    <Stack gap="xs">
-                        <Text size="xs" fw={700} className="text-glow-cyan" style={{ textTransform: 'uppercase', letterSpacing: '1px' }}>
-                            Map Layers
-                        </Text>
-                        <Group gap="xs" align="center" justify="space-between">
-                            <Text size="xs" c="dimmed">ADS-B Aircraft:</Text>
-                            <Switch 
-                                size="xs"
-                                checked={showADSB}
-                                onChange={(e) => setShowADSB(e.currentTarget.checked)}
-                                color="tacticalCyan"
-                            />
-                        </Group>
-                        <Group gap="xs" align="center" justify="space-between">
-                            <Text size="xs" c="dimmed">RF Sensors:</Text>
-                            <Switch 
-                                size="xs"
-                                checked={showSensorData}
-                                onChange={(e) => setShowSensorData(e.currentTarget.checked)}
-                                color="tacticalGreen"
-                            />
-                        </Group>
-                    </Stack>
+                    <Group gap="xs" align="center" justify="space-between">
+                        <Text size="xs" c="dimmed">ADS-B Aircraft:</Text>
+                        <Switch 
+                            size="xs"
+                            checked={showADSB}
+                            onChange={(e) => setShowADSB(e.currentTarget.checked)}
+                            color="tacticalCyan"
+                        />
+                    </Group>
                 </Stack>
             </Paper>
 
