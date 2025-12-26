@@ -6,10 +6,10 @@ import L from 'leaflet';
 import 'react-leaflet-fullscreen/styles.css';
 import 'leaflet.marker.slideto';
 import 'leaflet-rotatedmarker';
-import { Divider, Drawer, Image, Paper, Table, Text, useComputedColorScheme, ActionIcon, Group, Tooltip, Badge, Stack, Switch, SegmentedControl, Button, Collapse } from '@mantine/core';
+import { Divider, Drawer, Image, Paper, Table, Text, useComputedColorScheme, ActionIcon, Group, Tooltip, Badge, Stack, Switch, SegmentedControl, Button, Collapse, Grid } from '@mantine/core';
 import axios from 'axios';
 import { notifications } from '@mantine/notifications';
-import { IconX, IconRuler, IconMapPin, IconCircle, IconRoute, IconCrosshair, IconStack2, Icon3dCubeSphere, IconTarget, IconCurrentLocation, IconChevronLeft, IconChevronRight, IconPolygon, IconRectangle, IconSquare, IconPencil, IconTrash, IconEdit, IconSend, IconUsers, IconMapSearch, IconCompass, IconAlertTriangle, IconFirstAidKit, IconBuildingCommunity, IconFlag, IconCamera, IconVideo, IconSettings, IconLayersLinked, IconPlus, IconMinus, IconMap2, IconWorldLatitude, IconWorldLongitude, IconLocation, IconClock, IconActivity } from '@tabler/icons-react';
+import { IconX, IconRuler, IconMapPin, IconCircle, IconRoute, IconCrosshair, IconStack2, Icon3dCubeSphere, IconTarget, IconCurrentLocation, IconChevronLeft, IconChevronRight, IconPolygon, IconRectangle, IconSquare, IconPencil, IconTrash, IconEdit, IconSend, IconUsers, IconMapSearch, IconCompass, IconAlertTriangle, IconFirstAidKit, IconBuildingCommunity, IconFlag, IconCamera, IconVideo, IconSettings, IconLayersLinked, IconPlus, IconMinus, IconMap2, IconWorldLatitude, IconWorldLongitude, IconLocation, IconClock, IconActivity, IconShield } from '@tabler/icons-react';
 import * as milsymbol from 'milsymbol';
 import { useDisclosure } from '@mantine/hooks';
 import GreatCircle from './GreatCircle';
@@ -18,6 +18,7 @@ import { socket } from '@/socketio';
 import classes from './Map.module.css';
 import 'leaflet.fullscreen';
 import 'leaflet.fullscreen/Control.FullScreen.css';
+import 'leaflet.heat';
 import Arrow from './Arrow';
 import Video from './Video';
 import { ATAKToolbar } from './ATAKToolbar';
@@ -55,17 +56,254 @@ export default function Map() {
     const [showThreatTracker, setShowThreatTracker] = useState(false);
     const [showBattleRhythm, setShowBattleRhythm] = useState(false);
     const [tempMarker, setTempMarker] = useState<L.Marker | null>(null);
+    const [showHeatmap, setShowHeatmap] = useState(false);
+    const [heatmapData, setHeatmapData] = useState<any[]>([]);
+    const [heatmapType, setHeatmapType] = useState<'rf_signals' | 'rf_power' | 'threat'>('rf_signals');
     const mapRef = useRef<L.Map | null>(null);
     const measureLayerRef = useRef<L.LayerGroup>(new L.LayerGroup());
     const drawLayerRef = useRef<L.LayerGroup>(new L.LayerGroup());
     const measureLineRef = useRef<L.Polyline | null>(null);
     const drawLineRef = useRef<L.Polyline | null>(null);
+    const heatmapLayerRef = useRef<any>(null);
     const computedColorScheme = useComputedColorScheme('light', { getInitialValueInEffect: true });
 
     const eudsLayer = new L.LayerGroup();
     const rbLinesLayer = new L.LayerGroup();
     const markersLayer = new L.LayerGroup();
     const fovsLayer = new L.LayerGroup();
+
+    // Helper function to convert decimal degrees to DMS format
+    const convertToDMS = (decimal: number, type: 'lat' | 'lng') => {
+        const absolute = Math.abs(decimal);
+        const degrees = Math.floor(absolute);
+        const minutesFloat = (absolute - degrees) * 60;
+        const minutes = Math.floor(minutesFloat);
+        const seconds = ((minutesFloat - minutes) * 60).toFixed(2);
+        
+        const direction = type === 'lat' 
+            ? (decimal >= 0 ? 'N' : 'S')
+            : (decimal >= 0 ? 'E' : 'W');
+            
+        return `${degrees}° ${minutes}' ${seconds}" ${direction}`;
+    };
+
+    // Handle tool selection
+    const handleToolSelect = (tool: string) => {
+        setSelectedTool(tool);
+        
+        // Clear temp marker when switching tools
+        if (tempMarker && mapRef.current) {
+            mapRef.current.removeLayer(tempMarker);
+            setTempMarker(null);
+        }
+        
+        // Reset all modes first
+        setMeasureMode(false);
+        setDrawMode('none');
+        setLinePoints([]);
+        setPolygonPoints([]);
+        
+        // Handle tool selection logic
+        if (tool === 'measure') {
+            setMeasureMode(true);
+            setMeasurePoints([]);
+            notifications.show({
+                title: 'Measure Mode Active',
+                message: 'Click points on map. Right-click to finish.',
+                color: 'tacticalCyan',
+                autoClose: 3000,
+            });
+        } else if (tool === 'marker') {
+            setDrawMode('marker');
+            notifications.show({
+                title: 'Self Marker Mode',
+                message: 'Click map to place your position marker',
+                color: 'tacticalCyan',
+                autoClose: 3000,
+            });
+        } else if (tool === 'hostile') {
+            setDrawMode('hostile');
+            notifications.show({
+                title: 'Hostile Marker Mode',
+                message: 'Click map to mark hostile contact',
+                color: 'tacticalRed',
+                autoClose: 3000,
+            });
+        } else if (tool === 'friendly') {
+            setDrawMode('friendly');
+            notifications.show({
+                title: 'Friendly Marker Mode',
+                message: 'Click map to mark friendly unit',
+                color: 'tacticalGreen',
+                autoClose: 3000,
+            });
+        } else if (tool === 'waypoint') {
+            setDrawMode('waypoint');
+            notifications.show({
+                title: 'Waypoint Mode',
+                message: 'Click map to place navigation waypoint',
+                color: 'tacticalBlue',
+                autoClose: 3000,
+            });
+        } else if (tool === 'alert') {
+            setDrawMode('alert');
+            notifications.show({
+                title: 'Alert Mode',
+                message: 'Click map to place alert marker',
+                color: 'tacticalOrange',
+                autoClose: 3000,
+            });
+        } else if (tool === 'casevac') {
+            setDrawMode('casevac');
+            notifications.show({
+                title: 'CASEVAC Mode',
+                message: 'Click map to request medical evacuation',
+                color: 'tacticalRed',
+                autoClose: 3000,
+            });
+        } else if (tool === 'circle') {
+            setDrawMode('circle');
+            notifications.show({
+                title: 'Circle Mode',
+                message: 'Click map to draw circle (1km radius)',
+                color: 'tacticalCyan',
+                autoClose: 3000,
+            });
+        } else if (tool === 'line') {
+            setDrawMode('line');
+            notifications.show({
+                title: 'Line Mode',
+                message: 'Click points. Right-click to finish.',
+                color: 'tacticalOrange',
+                autoClose: 3000,
+            });
+        } else if (tool === 'polygon') {
+            setDrawMode('polygon');
+            notifications.show({
+                title: 'Polygon Mode',
+                message: 'Click vertices (min 3). Right-click to complete.',
+                color: 'tacticalGreen',
+                autoClose: 3000,
+            });
+        } else if (tool === 'rectangle') {
+            setDrawMode('rectangle');
+            notifications.show({
+                title: 'Rectangle Mode',
+                message: 'Click two opposite corners',
+                color: 'tacticalBlue',
+                autoClose: 3000,
+            });
+        } else if (tool === 'send-cot') {
+            setShowMissionPanel(!showMissionPanel);
+        }
+    };
+
+    // Handle clear all
+    const handleClearAll = () => {
+        measureLayerRef.current.clearLayers();
+        drawLayerRef.current.clearLayers();
+        setMeasurePoints([]);
+        setLinePoints([]);
+        setPolygonPoints([]);
+        measureLineRef.current = null;
+        drawLineRef.current = null;
+        setMeasureMode(false);
+        setDrawMode('none');
+        setSelectedTool('none');
+        if (tempMarker && mapRef.current) {
+            mapRef.current.removeLayer(tempMarker);
+            setTempMarker(null);
+        }
+        if (mapRef.current) {
+            mapRef.current.closePopup();
+        }
+        notifications.show({
+            title: 'Cleared',
+            message: 'All tactical graphics removed',
+            color: 'tacticalRed',
+            autoClose: 2000,
+        });
+    };
+
+    // Fetch sensor heatmap data
+    const fetchHeatmapData = async () => {
+        try {
+            const response = await axios.get('/api/markers', {
+                params: { per_page: 1000, group_name: 'RF_Sensors' }
+            });
+            
+            if (response.data && response.data.results) {
+                const heatPoints: any[] = [];
+                
+                response.data.results.forEach((marker: any) => {
+                    if (marker.point && marker.point.lat && marker.point.lon) {
+                        let intensity = 0.5; // default
+                        
+                        // Calculate intensity based on type
+                        if (heatmapType === 'rf_signals') {
+                            // More signals = hotter
+                            intensity = 0.8;
+                        } else if (heatmapType === 'rf_power') {
+                            // Higher power = hotter (convert dbm to 0-1 scale)
+                            const powerDbm = marker.power_dbm || -100;
+                            intensity = Math.min(1, Math.max(0, (powerDbm + 100) / 50));
+                        } else if (heatmapType === 'threat') {
+                            // Threat level based on signal type or frequency
+                            if (marker.signal_type?.includes('Jammer') || marker.signal_type?.includes('Hostile')) {
+                                intensity = 1.0;
+                            } else if (marker.signal_type?.includes('Drone')) {
+                                intensity = 0.7;
+                            } else {
+                                intensity = 0.3;
+                            }
+                        }
+                        
+                        heatPoints.push([marker.point.lat, marker.point.lon, intensity]);
+                    }
+                });
+                
+                setHeatmapData(heatPoints);
+                updateHeatmapLayer(heatPoints);
+            }
+        } catch (error) {
+            console.error('Failed to fetch heatmap data:', error);
+        }
+    };
+
+    // Update heatmap layer
+    const updateHeatmapLayer = (data: any[]) => {
+        if (!mapRef.current) return;
+        
+        // Remove existing heatmap layer
+        if (heatmapLayerRef.current) {
+            mapRef.current.removeLayer(heatmapLayerRef.current);
+        }
+        
+        if (data.length > 0 && showHeatmap) {
+            // @ts-ignore - leaflet.heat types
+            heatmapLayerRef.current = (L as any).heatLayer(data, {
+                radius: 25,
+                blur: 35,
+                maxZoom: 17,
+                max: 1.0,
+                gradient: heatmapType === 'threat' 
+                    ? {0.0: 'green', 0.5: 'yellow', 0.75: 'orange', 1.0: 'red'}
+                    : {0.0: 'blue', 0.5: 'cyan', 0.75: 'yellow', 1.0: 'red'}
+            }).addTo(mapRef.current);
+        }
+    };
+
+    // Effect to fetch heatmap data when enabled or type changes
+    useEffect(() => {
+        if (showHeatmap) {
+            fetchHeatmapData();
+            const interval = setInterval(fetchHeatmapData, 10000); // Update every 10s
+            return () => clearInterval(interval);
+        } else if (heatmapLayerRef.current && mapRef.current) {
+            mapRef.current.removeLayer(heatmapLayerRef.current);
+            heatmapLayerRef.current = null;
+        }
+    }, [showHeatmap, heatmapType]);
 
     function formatDrawer(eud:any, point:any) {
         const detail_rows:ReactElement[] = [];
@@ -1203,146 +1441,6 @@ export default function Map() {
                 </Paper>
             )}
 
-            {/* ATAK-Style Toolbar (Left Side) */}
-            <ATAKToolbar
-                position="left"
-                selectedTool={selectedTool}
-                onToolSelect={(tool) => {
-                    setSelectedTool(tool);
-                    
-                    // Clear temp marker when switching tools
-                    if (tempMarker && mapRef.current) {
-                        mapRef.current.removeLayer(tempMarker);
-                        setTempMarker(null);
-                    }
-                    
-                    // Reset all modes first
-                    setMeasureMode(false);
-                    setDrawMode('none');
-                    setLinePoints([]);
-                    setPolygonPoints([]);
-                    
-                    // Handle tool selection logic
-                    if (tool === 'measure') {
-                        setMeasureMode(true);
-                        setMeasurePoints([]);
-                        notifications.show({
-                            title: 'Measure Mode Active',
-                            message: 'Click points on map. Right-click to finish.',
-                            color: 'tacticalCyan',
-                            autoClose: 3000,
-                        });
-                    } else if (tool === 'marker') {
-                        setDrawMode('marker');
-                        notifications.show({
-                            title: 'Self Marker Mode',
-                            message: 'Click map to place your position marker',
-                            color: 'tacticalCyan',
-                            autoClose: 3000,
-                        });
-                    } else if (tool === 'hostile') {
-                        setDrawMode('hostile');
-                        notifications.show({
-                            title: 'Hostile Marker Mode',
-                            message: 'Click map to mark hostile contact',
-                            color: 'tacticalRed',
-                            autoClose: 3000,
-                        });
-                    } else if (tool === 'friendly') {
-                        setDrawMode('friendly');
-                        notifications.show({
-                            title: 'Friendly Marker Mode',
-                            message: 'Click map to mark friendly unit',
-                            color: 'tacticalGreen',
-                            autoClose: 3000,
-                        });
-                    } else if (tool === 'waypoint') {
-                        setDrawMode('waypoint');
-                        notifications.show({
-                            title: 'Waypoint Mode',
-                            message: 'Click map to place navigation waypoint',
-                            color: 'tacticalBlue',
-                            autoClose: 3000,
-                        });
-                    } else if (tool === 'alert') {
-                        setDrawMode('alert');
-                        notifications.show({
-                            title: 'Alert Mode',
-                            message: 'Click map to place alert marker',
-                            color: 'tacticalOrange',
-                            autoClose: 3000,
-                        });
-                    } else if (tool === 'casevac') {
-                        setDrawMode('casevac');
-                        notifications.show({
-                            title: 'CASEVAC Mode',
-                            message: 'Click map to request medical evacuation',
-                            color: 'tacticalRed',
-                            autoClose: 3000,
-                        });
-                    } else if (tool === 'circle') {
-                        setDrawMode('circle');
-                        notifications.show({
-                            title: 'Circle Mode',
-                            message: 'Click map to draw circle (1km radius)',
-                            color: 'tacticalCyan',
-                            autoClose: 3000,
-                        });
-                    } else if (tool === 'line') {
-                        setDrawMode('line');
-                        notifications.show({
-                            title: 'Line Mode',
-                            message: 'Click points. Right-click to finish.',
-                            color: 'tacticalOrange',
-                            autoClose: 3000,
-                        });
-                    } else if (tool === 'polygon') {
-                        setDrawMode('polygon');
-                        notifications.show({
-                            title: 'Polygon Mode',
-                            message: 'Click vertices (min 3). Right-click to complete.',
-                            color: 'tacticalGreen',
-                            autoClose: 3000,
-                        });
-                    } else if (tool === 'rectangle') {
-                        setDrawMode('rectangle');
-                        notifications.show({
-                            title: 'Rectangle Mode',
-                            message: 'Click two opposite corners',
-                            color: 'tacticalBlue',
-                            autoClose: 3000,
-                        });
-                    } else if (tool === 'send-cot') {
-                        setShowMissionPanel(!showMissionPanel);
-                    }
-                }}
-                onClearAll={() => {
-                    measureLayerRef.current.clearLayers();
-                    drawLayerRef.current.clearLayers();
-                    setMeasurePoints([]);
-                    setLinePoints([]);
-                    setPolygonPoints([]);
-                    measureLineRef.current = null;
-                    drawLineRef.current = null;
-                    setMeasureMode(false);
-                    setDrawMode('none');
-                    setSelectedTool('none');
-                    if (tempMarker && mapRef.current) {
-                        mapRef.current.removeLayer(tempMarker);
-                        setTempMarker(null);
-                    }
-                    if (mapRef.current) {
-                        mapRef.current.closePopup();
-                    }
-                    notifications.show({
-                        title: 'Cleared',
-                        message: 'All tactical graphics removed',
-                        color: 'tacticalRed',
-                        autoClose: 2000,
-                    });
-                }}
-            />
-
             {/* Right Side Status Panel */}
             <Paper
                 shadow="xl"
@@ -1350,8 +1448,10 @@ export default function Map() {
                 style={{
                     position: 'fixed',
                     top: '5.5rem',
-                    right: showSidebar ? '10px' : '-320px',
-                    width: '320px',
+                    right: showSidebar ? '10px' : '-400px',
+                    width: '400px',
+                    maxHeight: 'calc(100vh - 6rem)',
+                    overflowY: 'auto',
                     zIndex: 1000,
                     backgroundColor: 'rgba(10, 14, 20, 0.95)',
                     border: '1px solid rgba(100, 255, 218, 0.4)',
@@ -1385,19 +1485,263 @@ export default function Map() {
 
                     <Divider color="rgba(100, 255, 218, 0.3)" />
 
+                    {/* Coordinate Display */}
+                    {currentCoords && (
+                        <>
+                            <Stack gap="xs">
+                                <Text size="xs" fw={700} className="text-glow-cyan" style={{ textTransform: 'uppercase', letterSpacing: '1px' }}>
+                                    Coordinates
+                                </Text>
+                                <Group gap="xs" justify="space-between">
+                                    <Group gap="xs">
+                                        <IconWorldLatitude size={16} color="#64ffda" />
+                                        <Text size="sm" fw={500}>
+                                            {coordinateFormat === 'DD' 
+                                                ? `${currentCoords.lat.toFixed(6)}°` 
+                                                : coordinateFormat === 'DMS' 
+                                                    ? convertToDMS(currentCoords.lat, 'lat')
+                                                    : '18T WM 12345'}
+                                        </Text>
+                                    </Group>
+                                </Group>
+                                <Group gap="xs" justify="space-between">
+                                    <Group gap="xs">
+                                        <IconWorldLongitude size={16} color="#64ffda" />
+                                        <Text size="sm" fw={500}>
+                                            {coordinateFormat === 'DD' 
+                                                ? `${currentCoords.lng.toFixed(6)}°` 
+                                                : coordinateFormat === 'DMS' 
+                                                    ? convertToDMS(currentCoords.lng, 'lng')
+                                                    : '67890'}
+                                        </Text>
+                                    </Group>
+                                </Group>
+                                <SegmentedControl
+                                    size="xs"
+                                    value={coordinateFormat}
+                                    onChange={(value: any) => setCoordinateFormat(value)}
+                                    data={[
+                                        { label: 'DD', value: 'DD' },
+                                        { label: 'DMS', value: 'DMS' },
+                                        { label: 'MGRS', value: 'MGRS' },
+                                    ]}
+                                    color="tacticalCyan"
+                                />
+                            </Stack>
+                            <Divider color="rgba(100, 255, 218, 0.3)" />
+                        </>
+                    )}
+
+                    {/* ATAK Tools */}
+                    <Stack gap="xs">
+                        <Text size="xs" fw={700} className="text-glow-cyan" style={{ textTransform: 'uppercase', letterSpacing: '1px' }}>
+                            ATAK Tools
+                        </Text>
+                        <Group gap="xs" wrap="wrap">
+                            <Tooltip label="Self Marker">
+                                <ActionIcon
+                                    size="lg"
+                                    variant={selectedTool === 'marker' ? 'filled' : 'light'}
+                                    color="tacticalCyan"
+                                    onClick={() => handleToolSelect('marker')}
+                                >
+                                    <IconMapPin size={18} />
+                                </ActionIcon>
+                            </Tooltip>
+                            <Tooltip label="Hostile Marker">
+                                <ActionIcon
+                                    size="lg"
+                                    variant={selectedTool === 'hostile' ? 'filled' : 'light'}
+                                    color="tacticalRed"
+                                    onClick={() => handleToolSelect('hostile')}
+                                >
+                                    <IconTarget size={18} />
+                                </ActionIcon>
+                            </Tooltip>
+                            <Tooltip label="Friendly Marker">
+                                <ActionIcon
+                                    size="lg"
+                                    variant={selectedTool === 'friendly' ? 'filled' : 'light'}
+                                    color="tacticalGreen"
+                                    onClick={() => handleToolSelect('friendly')}
+                                >
+                                    <IconUsers size={18} />
+                                </ActionIcon>
+                            </Tooltip>
+                            <Tooltip label="CASEVAC">
+                                <ActionIcon
+                                    size="lg"
+                                    variant={selectedTool === 'casevac' ? 'filled' : 'light'}
+                                    color="tacticalRed"
+                                    onClick={() => handleToolSelect('casevac')}
+                                >
+                                    <IconFirstAidKit size={18} />
+                                </ActionIcon>
+                            </Tooltip>
+                            <Tooltip label="Alert">
+                                <ActionIcon
+                                    size="lg"
+                                    variant={selectedTool === 'alert' ? 'filled' : 'light'}
+                                    color="tacticalOrange"
+                                    onClick={() => handleToolSelect('alert')}
+                                >
+                                    <IconAlertTriangle size={18} />
+                                </ActionIcon>
+                            </Tooltip>
+                            <Tooltip label="Waypoint">
+                                <ActionIcon
+                                    size="lg"
+                                    variant={selectedTool === 'waypoint' ? 'filled' : 'light'}
+                                    color="tacticalBlue"
+                                    onClick={() => handleToolSelect('waypoint')}
+                                >
+                                    <IconFlag size={18} />
+                                </ActionIcon>
+                            </Tooltip>
+                            <Tooltip label="Measure Distance">
+                                <ActionIcon
+                                    size="lg"
+                                    variant={selectedTool === 'measure' ? 'filled' : 'light'}
+                                    color="tacticalCyan"
+                                    onClick={() => handleToolSelect('measure')}
+                                >
+                                    <IconRuler size={18} />
+                                </ActionIcon>
+                            </Tooltip>
+                            <Tooltip label="Draw Line">
+                                <ActionIcon
+                                    size="lg"
+                                    variant={selectedTool === 'line' ? 'filled' : 'light'}
+                                    color="tacticalOrange"
+                                    onClick={() => handleToolSelect('line')}
+                                >
+                                    <IconRoute size={18} />
+                                </ActionIcon>
+                            </Tooltip>
+                            <Tooltip label="Draw Circle">
+                                <ActionIcon
+                                    size="lg"
+                                    variant={selectedTool === 'circle' ? 'filled' : 'light'}
+                                    color="tacticalCyan"
+                                    onClick={() => handleToolSelect('circle')}
+                                >
+                                    <IconCircle size={18} />
+                                </ActionIcon>
+                            </Tooltip>
+                            <Tooltip label="Draw Polygon">
+                                <ActionIcon
+                                    size="lg"
+                                    variant={selectedTool === 'polygon' ? 'filled' : 'light'}
+                                    color="tacticalGreen"
+                                    onClick={() => handleToolSelect('polygon')}
+                                >
+                                    <IconPolygon size={18} />
+                                </ActionIcon>
+                            </Tooltip>
+                            <Tooltip label="Draw Rectangle">
+                                <ActionIcon
+                                    size="lg"
+                                    variant={selectedTool === 'rectangle' ? 'filled' : 'light'}
+                                    color="tacticalBlue"
+                                    onClick={() => handleToolSelect('rectangle')}
+                                >
+                                    <IconRectangle size={18} />
+                                </ActionIcon>
+                            </Tooltip>
+                            <Tooltip label="Clear All">
+                                <ActionIcon
+                                    size="lg"
+                                    variant="light"
+                                    color="tacticalRed"
+                                    onClick={handleClearAll}
+                                >
+                                    <IconTrash size={18} />
+                                </ActionIcon>
+                            </Tooltip>
+                        </Group>
+                    </Stack>
+
+                    <Divider color="rgba(100, 255, 218, 0.3)" />
+
+                    <Stack gap="xs">
+                        <Text size="xs" fw={700} className="text-glow-cyan" style={{ textTransform: 'uppercase', letterSpacing: '1px' }}>
+                            C2 Dashboard
+                        </Text>
+                        {showC2Dashboard && (
+                            <>
+                                <Grid gutter="xs">
+                                    <Grid.Col span={6}>
+                                        <Paper p="xs" style={{ backgroundColor: 'rgba(100, 255, 218, 0.1)', border: '1px solid rgba(100, 255, 218, 0.3)' }}>
+                                            <Stack gap={4} align="center">
+                                                <IconUsers size={20} color="#4ade80" />
+                                                <Text size="xl" fw={700} c="tacticalGreen">
+                                                    {Math.floor(Object.keys(markers).length * 0.7)}
+                                                </Text>
+                                                <Text size="xs" c="dimmed">Friendly</Text>
+                                            </Stack>
+                                        </Paper>
+                                    </Grid.Col>
+                                    <Grid.Col span={6}>
+                                        <Paper p="xs" style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
+                                            <Stack gap={4} align="center">
+                                                <IconTarget size={20} color="#ef4444" />
+                                                <Text size="xl" fw={700} c="tacticalRed">
+                                                    {Math.floor(Object.keys(markers).length * 0.2)}
+                                                </Text>
+                                                <Text size="xs" c="dimmed">Hostile</Text>
+                                            </Stack>
+                                        </Paper>
+                                    </Grid.Col>
+                                    <Grid.Col span={6}>
+                                        <Paper p="xs" style={{ backgroundColor: 'rgba(251, 191, 36, 0.1)', border: '1px solid rgba(251, 191, 36, 0.3)' }}>
+                                            <Stack gap={4} align="center">
+                                                <IconAlertTriangle size={20} color="#fbbf24" />
+                                                <Text size="xl" fw={700} c="tacticalOrange">
+                                                    {Math.floor(Object.keys(markers).length * 0.1)}
+                                                </Text>
+                                                <Text size="xs" c="dimmed">Unknown</Text>
+                                            </Stack>
+                                        </Paper>
+                                    </Grid.Col>
+                                    <Grid.Col span={6}>
+                                        <Paper p="xs" style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
+                                            <Stack gap={4} align="center">
+                                                <IconShield size={20} color="#3b82f6" />
+                                                <Text size="xl" fw={700} c="tacticalBlue">85%</Text>
+                                                <Text size="xs" c="dimmed">Readiness</Text>
+                                            </Stack>
+                                        </Paper>
+                                    </Grid.Col>
+                                </Grid>
+                                <Button
+                                    variant="subtle"
+                                    size="xs"
+                                    color="tacticalCyan"
+                                    onClick={() => setShowC2Dashboard(false)}
+                                >
+                                    Hide Dashboard
+                                </Button>
+                            </>
+                        )}
+                        {!showC2Dashboard && (
+                            <Button
+                                variant="light"
+                                color="tacticalCyan"
+                                fullWidth
+                                leftSection={<IconActivity size={16} />}
+                                onClick={() => setShowC2Dashboard(true)}
+                            >
+                                Show C2 Dashboard
+                            </Button>
+                        )}
+                    </Stack>
+
+                    <Divider color="rgba(100, 255, 218, 0.3)" />
+
                     <Stack gap="xs">
                         <Text size="xs" fw={700} className="text-glow-cyan" style={{ textTransform: 'uppercase', letterSpacing: '1px' }}>
                             C2 Panels
                         </Text>
-                        <Button
-                            variant="light"
-                            color="tacticalCyan"
-                            fullWidth
-                            leftSection={<IconActivity size={16} />}
-                            onClick={() => setShowC2Dashboard(!showC2Dashboard)}
-                        >
-                            C2 Dashboard
-                        </Button>
                         <Button
                             variant="light"
                             color="tacticalRed"
@@ -1416,6 +1760,34 @@ export default function Map() {
                         >
                             Battle Rhythm
                         </Button>
+                    </Stack>
+
+                    <Divider color="rgba(100, 255, 218, 0.3)" />
+
+                    <Stack gap="xs">
+                        <Text size="xs" fw={700} className="text-glow-cyan" style={{ textTransform: 'uppercase', letterSpacing: '1px' }}>
+                            RF Sensor Heatmap
+                        </Text>
+                        <Switch 
+                            label="Show Heatmap"
+                            checked={showHeatmap}
+                            onChange={(e) => setShowHeatmap(e.currentTarget.checked)}
+                            color="tacticalCyan"
+                            description="Visualize sensor data density"
+                        />
+                        {showHeatmap && (
+                            <SegmentedControl
+                                size="xs"
+                                value={heatmapType}
+                                onChange={(value: any) => setHeatmapType(value)}
+                                data={[
+                                    { label: 'Signals', value: 'rf_signals' },
+                                    { label: 'Power', value: 'rf_power' },
+                                    { label: 'Threats', value: 'threat' },
+                                ]}
+                                color="tacticalCyan"
+                            />
+                        )}
                     </Stack>
 
                     <Divider color="rgba(100, 255, 218, 0.3)" />
@@ -1449,16 +1821,6 @@ export default function Map() {
                 </Stack>
             </Paper>
 
-            {/* Coordinate Display (Bottom Center) */}
-            {currentCoords && (
-                <CoordinateDisplay
-                    lat={currentCoords.lat}
-                    lng={currentCoords.lng}
-                    format={coordinateFormat}
-                    onFormatChange={setCoordinateFormat}
-                />
-            )}
-
             {/* Mission Planning Panel */}
             {showMissionPanel && (
                 <MissionPlanning
@@ -1473,14 +1835,6 @@ export default function Map() {
                         });
                         setShowMissionPanel(false);
                     }}
-                />
-            )}
-
-            {/* C2 Dashboard */}
-            {showC2Dashboard && (
-                <C2Dashboard
-                    contacts={Object.keys(markers).length}
-                    onClose={() => setShowC2Dashboard(false)}
                 />
             )}
 
