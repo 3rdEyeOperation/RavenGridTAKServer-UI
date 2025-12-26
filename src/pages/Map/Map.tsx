@@ -62,6 +62,7 @@ export default function Map() {
     const [heatmapType, setHeatmapType] = useState<'rf_signals' | 'rf_power' | 'threat'>('rf_signals');
     const [alerts, setAlerts] = useState<any[]>([]);
     const [showAlerts, setShowAlerts] = useState(false);
+    const [euds, setEuds] = useState<any[]>([]);
     const mapRef = useRef<L.Map | null>(null);
     const measureLayerRef = useRef<L.LayerGroup>(new L.LayerGroup());
     const drawLayerRef = useRef<L.LayerGroup>(new L.LayerGroup());
@@ -366,6 +367,28 @@ export default function Map() {
     useEffect(() => {
         fetchAlerts();
         const interval = setInterval(fetchAlerts, 30000); // Update every 30s
+        return () => clearInterval(interval);
+    }, []);
+
+    // Fetch EUDs (End User Devices) data
+    const fetchEuds = async () => {
+        try {
+            const response = await axios.get(apiRoutes.eud, {
+                params: { page: 1, per_page: 10 }
+            });
+            
+            if (response.data && response.data.results) {
+                setEuds(response.data.results);
+            }
+        } catch (error) {
+            console.error('Failed to fetch EUDs:', error);
+        }
+    };
+
+    // Fetch EUDs on component mount and periodically
+    useEffect(() => {
+        fetchEuds();
+        const interval = setInterval(fetchEuds, 30000); // Update every 30s
         return () => clearInterval(interval);
     }, []);
 
@@ -1860,6 +1883,52 @@ export default function Map() {
                                             {alerts.length > 3 && (
                                                 <Text size="xs" c="dimmed" ta="center">
                                                     +{alerts.length - 3} more alerts
+                                                </Text>
+                                            )}
+                                        </Stack>
+                                    </>
+                                )}
+                                
+                                {/* Connected ATAK Users */}
+                                {euds.length > 0 && (
+                                    <>
+                                        <Divider color="rgba(100, 255, 218, 0.2)" label="Friendly ATAK Users" labelPosition="center" />
+                                        <Stack gap={4}>
+                                            {euds.slice(0, 5).map((eud, idx) => (
+                                                <Paper
+                                                    key={idx}
+                                                    p="xs"
+                                                    style={{
+                                                        backgroundColor: 'rgba(100, 255, 218, 0.05)',
+                                                        border: '1px solid rgba(100, 255, 218, 0.2)',
+                                                    }}
+                                                >
+                                                    <Group justify="space-between" gap={4}>
+                                                        <Stack gap={2} style={{ flex: 1 }}>
+                                                            <Group gap={4}>
+                                                                <IconUsers size={14} color="#4ade80" />
+                                                                <Text size="xs" fw={700} className="text-glow-cyan">
+                                                                    {eud.callsign}
+                                                                </Text>
+                                                            </Group>
+                                                            <Text size="xs" c="dimmed">
+                                                                {eud.device} • {eud.platform}
+                                                            </Text>
+                                                        </Stack>
+                                                        <Stack gap={2} align="flex-end">
+                                                            <Badge size="xs" color="tacticalGreen" variant="dot">
+                                                                Online
+                                                            </Badge>
+                                                            <Text size="xs" c="dimmed" style={{ whiteSpace: 'nowrap' }}>
+                                                                {new Date(eud.last_event_time).toLocaleTimeString()}
+                                                            </Text>
+                                                        </Stack>
+                                                    </Group>
+                                                </Paper>
+                                            ))}
+                                            {euds.length > 5 && (
+                                                <Text size="xs" c="dimmed" ta="center">
+                                                    +{euds.length - 5} more users
                                                 </Text>
                                             )}
                                         </Stack>
