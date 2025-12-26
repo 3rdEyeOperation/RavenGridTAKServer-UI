@@ -675,6 +675,7 @@ export default function Map() {
                         setTempMarker(null);
                     }
                     
+                    const uid = `marker-${Date.now()}`;
                     const marker = L.marker(e.latlng, {
                         icon: L.divIcon({
                             className: 'tactical-marker',
@@ -711,6 +712,9 @@ export default function Map() {
                     marker.bindPopup(popup).openPopup();
                     drawLayerRef.current.addLayer(marker);
                     
+                    // Add to markers state for C2 Dashboard tracking
+                    setMarkers(prev => ({ ...prev, [uid]: marker }));
+                    
                     notifications.show({
                         title: 'Self Marker Placed',
                         message: `${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)}`,
@@ -723,6 +727,7 @@ export default function Map() {
                         setTempMarker(null);
                     }
                     
+                    const uid = `h-manual-${Date.now()}`;
                     const marker = L.marker(e.latlng, {
                         icon: L.divIcon({
                             className: 'tactical-marker-hostile',
@@ -745,6 +750,9 @@ export default function Map() {
                     marker.bindPopup(popup).openPopup();
                     drawLayerRef.current.addLayer(marker);
                     
+                    // Add to markers state for C2 Dashboard tracking
+                    setMarkers(prev => ({ ...prev, [uid]: marker }));
+                    
                     notifications.show({
                         title: 'Hostile Marker Placed',
                         message: 'Hostile contact marked',
@@ -757,6 +765,7 @@ export default function Map() {
                         setTempMarker(null);
                     }
                     
+                    const uid = `f-manual-${Date.now()}`;
                     const marker = L.marker(e.latlng, {
                         icon: L.divIcon({
                             className: 'tactical-marker-friendly',
@@ -779,6 +788,9 @@ export default function Map() {
                     marker.bindPopup(popup).openPopup();
                     drawLayerRef.current.addLayer(marker);
                     
+                    // Add to markers state for C2 Dashboard tracking
+                    setMarkers(prev => ({ ...prev, [uid]: marker }));
+                    
                     notifications.show({
                         title: 'Friendly Marker Placed',
                         message: 'Friendly unit marked',
@@ -791,6 +803,7 @@ export default function Map() {
                         setTempMarker(null);
                     }
                     
+                    const uid = `waypoint-${Date.now()}`;
                     const marker = L.marker(e.latlng, {
                         icon: L.divIcon({
                             className: 'tactical-marker-waypoint',
@@ -812,6 +825,9 @@ export default function Map() {
                     marker.bindPopup(popup).openPopup();
                     drawLayerRef.current.addLayer(marker);
                     
+                    // Add to markers state for C2 Dashboard tracking
+                    setMarkers(prev => ({ ...prev, [uid]: marker }));
+                    
                     notifications.show({
                         title: 'Waypoint Placed',
                         message: 'Navigation waypoint marked',
@@ -824,6 +840,7 @@ export default function Map() {
                         setTempMarker(null);
                     }
                     
+                    const uid = `alert-${Date.now()}`;
                     const marker = L.marker(e.latlng, {
                         icon: L.divIcon({
                             className: 'tactical-marker-alert',
@@ -846,6 +863,9 @@ export default function Map() {
                     marker.bindPopup(popup).openPopup();
                     drawLayerRef.current.addLayer(marker);
                     
+                    // Add to markers state for C2 Dashboard tracking
+                    setMarkers(prev => ({ ...prev, [uid]: marker }));
+                    
                     notifications.show({
                         title: 'Alert Placed',
                         message: 'Alert marker placed',
@@ -858,6 +878,7 @@ export default function Map() {
                         setTempMarker(null);
                     }
                     
+                    const uid = `casevac-${Date.now()}`;
                     const marker = L.marker(e.latlng, {
                         icon: L.divIcon({
                             className: 'tactical-marker-casevac',
@@ -880,6 +901,9 @@ export default function Map() {
                     
                     marker.bindPopup(popup).openPopup();
                     drawLayerRef.current.addLayer(marker);
+                    
+                    // Add to markers state for C2 Dashboard tracking
+                    setMarkers(prev => ({ ...prev, [uid]: marker }));
                     
                     notifications.show({
                         title: 'CASEVAC Requested',
