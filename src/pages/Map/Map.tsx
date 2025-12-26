@@ -1852,57 +1852,83 @@ export default function Map() {
                     <Divider color="rgba(100, 255, 218, 0.3)" />
 
                     <Stack gap="xs">
-                        <Text size="xs" fw={700} className="text-glow-cyan" style={{ textTransform: 'uppercase', letterSpacing: '1px' }}>
-                            C2 Dashboard
-                        </Text>
+                        <Group justify="space-between" align="center">
+                            <Text size="xs" fw={700} className="text-glow-cyan" style={{ textTransform: 'uppercase', letterSpacing: '1px' }}>
+                                C2 Dashboard
+                            </Text>
+                            <Badge size="lg" variant="light" color="tacticalCyan" className="status-online">
+                                {markerStats.total} Total
+                            </Badge>
+                        </Group>
                         {showC2Dashboard && (
                             <>
-                                <Grid gutter="xs">
-                                    <Grid.Col span={6}>
-                                        <Paper p="xs" style={{ backgroundColor: 'rgba(100, 255, 218, 0.1)', border: '1px solid rgba(100, 255, 218, 0.3)' }}>
-                                            <Stack gap={4} align="center">
-                                                <IconUsers size={20} color="#4ade80" />
-                                                <Text size="xl" fw={700} c="tacticalGreen">
-                                                    {markerStats.friendly}
-                                                </Text>
-                                                <Text size="xs" c="dimmed">Friendly</Text>
-                                            </Stack>
-                                        </Paper>
-                                    </Grid.Col>
-                                    <Grid.Col span={6}>
-                                        <Paper p="xs" style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
-                                            <Stack gap={4} align="center">
-                                                <IconTarget size={20} color="#ef4444" />
-                                                <Text size="xl" fw={700} c="tacticalRed">
-                                                    {markerStats.hostile}
-                                                </Text>
-                                                <Text size="xs" c="dimmed">Hostile</Text>
-                                            </Stack>
-                                        </Paper>
-                                    </Grid.Col>
-                                    <Grid.Col span={6}>
-                                        <Paper p="xs" style={{ backgroundColor: 'rgba(251, 191, 36, 0.1)', border: '1px solid rgba(251, 191, 36, 0.3)' }}>
-                                            <Stack gap={4} align="center">
-                                                <IconAlertTriangle size={20} color="#fbbf24" />
-                                                <Text size="xl" fw={700} c="tacticalOrange">
-                                                    {markerStats.unknown}
-                                                </Text>
-                                                <Text size="xs" c="dimmed">Unknown</Text>
-                                            </Stack>
-                                        </Paper>
-                                    </Grid.Col>
-                                    <Grid.Col span={6}>
-                                        <Paper p="xs" style={{ backgroundColor: 'rgba(139, 92, 246, 0.1)', border: '1px solid rgba(139, 92, 246, 0.3)' }}>
-                                            <Stack gap={4} align="center">
-                                                <IconActivity size={20} color="#8b5cf6" />
-                                                <Text size="xl" fw={700} style={{ color: '#8b5cf6' }}>
-                                                    {markerStats.sensors}
-                                                </Text>
-                                                <Text size="xs" c="dimmed">RF Sensors</Text>
-                                            </Stack>
-                                        </Paper>
-                                    </Grid.Col>
-                                </Grid>
+                                {/* Tactical Forces Overview */}
+                                <Paper p="md" style={{ backgroundColor: 'rgba(10, 14, 20, 0.8)', border: '1px solid rgba(100, 255, 218, 0.3)' }}>
+                                    <Stack gap="md">
+                                        <Text size="xs" fw={700} c="tacticalCyan" style={{ textTransform: 'uppercase', letterSpacing: '1px' }}>
+                                            Forces on Ground
+                                        </Text>
+                                        <Grid gutter="md">
+                                            <Grid.Col span={6}>
+                                                <Paper p="md" style={{ backgroundColor: 'rgba(100, 255, 218, 0.1)', border: '2px solid rgba(100, 255, 218, 0.4)', borderRadius: '8px' }}>
+                                                    <Stack gap={6} align="center">
+                                                        <IconUsers size={24} color="#4ade80" />
+                                                        <Text size="2rem" fw={700} c="tacticalGreen" style={{ lineHeight: 1 }}>
+                                                            {markerStats.friendly}
+                                                        </Text>
+                                                        <Text size="xs" c="dimmed" fw={600} style={{ textTransform: 'uppercase' }}>Friendly</Text>
+                                                    </Stack>
+                                                </Paper>
+                                            </Grid.Col>
+                                            <Grid.Col span={6}>
+                                                <Paper p="md" style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '2px solid rgba(239, 68, 68, 0.4)', borderRadius: '8px' }}>
+                                                    <Stack gap={6} align="center">
+                                                        <IconTarget size={24} color="#ef4444" />
+                                                        <Text size="2rem" fw={700} c="tacticalRed" style={{ lineHeight: 1 }}>
+                                                            {markerStats.hostile}
+                                                        </Text>
+                                                        <Text size="xs" c="dimmed" fw={600} style={{ textTransform: 'uppercase' }}>Hostile</Text>
+                                                    </Stack>
+                                                </Paper>
+                                            </Grid.Col>
+                                        </Grid>
+                                    </Stack>
+                                </Paper>
+
+                                {/* Supporting Assets */}
+                                {(markerStats.sensors > 0 || markerStats.adsb > 0) && (
+                                    <Paper p="md" style={{ backgroundColor: 'rgba(10, 14, 20, 0.8)', border: '1px solid rgba(100, 255, 218, 0.2)' }}>
+                                        <Stack gap="md">
+                                            <Text size="xs" fw={700} c="tacticalCyan" style={{ textTransform: 'uppercase', letterSpacing: '1px' }}>
+                                                Supporting Assets
+                                            </Text>
+                                            <Group gap="md" grow>
+                                                {markerStats.sensors > 0 && (
+                                                    <Paper p="sm" style={{ backgroundColor: 'rgba(139, 92, 246, 0.1)', border: '1px solid rgba(139, 92, 246, 0.3)' }}>
+                                                        <Group gap="xs" justify="center">
+                                                            <IconActivity size={18} color="#8b5cf6" />
+                                                            <Text size="lg" fw={700} style={{ color: '#8b5cf6' }}>
+                                                                {markerStats.sensors}
+                                                            </Text>
+                                                            <Text size="xs" c="dimmed">RF Sensors</Text>
+                                                        </Group>
+                                                    </Paper>
+                                                )}
+                                                {markerStats.adsb > 0 && (
+                                                    <Paper p="sm" style={{ backgroundColor: 'rgba(100, 255, 218, 0.1)', border: '1px solid rgba(100, 255, 218, 0.3)' }}>
+                                                        <Group gap="xs" justify="center">
+                                                            <IconTarget size={18} color="#64ffda" />
+                                                            <Text size="lg" fw={700} c="tacticalCyan">
+                                                                {markerStats.adsb}
+                                                            </Text>
+                                                            <Text size="xs" c="dimmed">Aircraft</Text>
+                                                        </Group>
+                                                    </Paper>
+                                                )}
+                                            </Group>
+                                        </Stack>
+                                    </Paper>
+                                )}
                                 
                                 {/* Active Alerts */}
                                 {alerts.length > 0 && (
