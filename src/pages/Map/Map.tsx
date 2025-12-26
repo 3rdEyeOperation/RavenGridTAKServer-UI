@@ -1076,7 +1076,7 @@ export default function Map() {
                 const isADSB = markerElement?.querySelector('svg')?.innerHTML?.includes('air') || 
                                uid.startsWith('ICAO-'); // Common ADS-B UID pattern
                 
-                if (isADSB) {
+                if (isADSB && mapRef.current) {
                     if (showADSB) {
                         if (!mapRef.current.hasLayer(marker)) {
                             marker.addTo(markersLayer);
