@@ -1869,7 +1869,7 @@ export default function Map() {
                                             Forces on Ground
                                         </Text>
                                         <Grid gutter="md">
-                                            <Grid.Col span={6}>
+                                            <Grid.Col span={markerStats.unknown > 0 ? 4 : 6}>
                                                 <Paper p="md" style={{ backgroundColor: 'rgba(100, 255, 218, 0.1)', border: '2px solid rgba(100, 255, 218, 0.4)', borderRadius: '8px' }}>
                                                     <Stack gap={6} align="center">
                                                         <IconUsers size={24} color="#4ade80" />
@@ -1880,7 +1880,7 @@ export default function Map() {
                                                     </Stack>
                                                 </Paper>
                                             </Grid.Col>
-                                            <Grid.Col span={6}>
+                                            <Grid.Col span={markerStats.unknown > 0 ? 4 : 6}>
                                                 <Paper p="md" style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '2px solid rgba(239, 68, 68, 0.4)', borderRadius: '8px' }}>
                                                     <Stack gap={6} align="center">
                                                         <IconTarget size={24} color="#ef4444" />
@@ -1891,6 +1891,19 @@ export default function Map() {
                                                     </Stack>
                                                 </Paper>
                                             </Grid.Col>
+                                            {markerStats.unknown > 0 && (
+                                                <Grid.Col span={4}>
+                                                    <Paper p="md" style={{ backgroundColor: 'rgba(251, 191, 36, 0.1)', border: '2px solid rgba(251, 191, 36, 0.4)', borderRadius: '8px' }}>
+                                                        <Stack gap={6} align="center">
+                                                            <IconAlertTriangle size={24} color="#fbbf24" />
+                                                            <Text size="2rem" fw={700} c="tacticalOrange" style={{ lineHeight: 1 }}>
+                                                                {markerStats.unknown}
+                                                            </Text>
+                                                            <Text size="xs" c="dimmed" fw={600} style={{ textTransform: 'uppercase' }}>Unknown</Text>
+                                                        </Stack>
+                                                    </Paper>
+                                                </Grid.Col>
+                                            )}
                                         </Grid>
                                     </Stack>
                                 </Paper>
