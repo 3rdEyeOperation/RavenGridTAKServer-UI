@@ -6,7 +6,7 @@ import L from 'leaflet';
 import 'react-leaflet-fullscreen/styles.css';
 import 'leaflet.marker.slideto';
 import 'leaflet-rotatedmarker';
-import { Divider, Drawer, Image, Paper, Table, Text, useComputedColorScheme, ActionIcon, Group, Tooltip, Badge, Stack, Switch, SegmentedControl, Button, Collapse, Grid } from '@mantine/core';
+import { Divider, Drawer, Image, Paper, Table, Text, useComputedColorScheme, ActionIcon, Group, Tooltip, Badge, Stack, Switch, SegmentedControl, Button, Collapse, Grid, Accordion } from '@mantine/core';
 import axios from 'axios';
 import { notifications } from '@mantine/notifications';
 import { IconX, IconRuler, IconMapPin, IconCircle, IconRoute, IconCrosshair, IconStack2, Icon3dCubeSphere, IconTarget, IconCurrentLocation, IconChevronLeft, IconChevronRight, IconPolygon, IconRectangle, IconSquare, IconPencil, IconTrash, IconEdit, IconSend, IconUsers, IconMapSearch, IconCompass, IconAlertTriangle, IconFirstAidKit, IconBuildingCommunity, IconFlag, IconCamera, IconVideo, IconSettings, IconLayersLinked, IconPlus, IconMinus, IconMap2, IconWorldLatitude, IconWorldLongitude, IconLocation, IconClock, IconActivity, IconShield } from '@tabler/icons-react';
@@ -1665,133 +1665,189 @@ export default function Map() {
                     )}
 
                     {/* ATAK Tools */}
-                    <Stack gap="xs">
-                        <Text size="xs" fw={700} className="text-glow-cyan" style={{ textTransform: 'uppercase', letterSpacing: '1px' }}>
-                            ATAK Tools
-                        </Text>
-                        <Group gap="xs" wrap="wrap">
-                            <Tooltip label="Self Marker">
-                                <ActionIcon
-                                    size="lg"
-                                    variant={selectedTool === 'marker' ? 'filled' : 'light'}
-                                    color="tacticalCyan"
-                                    onClick={() => handleToolSelect('marker')}
-                                >
-                                    <IconMapPin size={18} />
-                                </ActionIcon>
-                            </Tooltip>
-                            <Tooltip label="Hostile Marker">
-                                <ActionIcon
-                                    size="lg"
-                                    variant={selectedTool === 'hostile' ? 'filled' : 'light'}
-                                    color="tacticalRed"
-                                    onClick={() => handleToolSelect('hostile')}
-                                >
-                                    <IconTarget size={18} />
-                                </ActionIcon>
-                            </Tooltip>
-                            <Tooltip label="Friendly Marker">
-                                <ActionIcon
-                                    size="lg"
-                                    variant={selectedTool === 'friendly' ? 'filled' : 'light'}
-                                    color="tacticalGreen"
-                                    onClick={() => handleToolSelect('friendly')}
-                                >
-                                    <IconUsers size={18} />
-                                </ActionIcon>
-                            </Tooltip>
-                            <Tooltip label="CASEVAC">
-                                <ActionIcon
-                                    size="lg"
-                                    variant={selectedTool === 'casevac' ? 'filled' : 'light'}
-                                    color="tacticalRed"
-                                    onClick={() => handleToolSelect('casevac')}
-                                >
-                                    <IconFirstAidKit size={18} />
-                                </ActionIcon>
-                            </Tooltip>
-                            <Tooltip label="Alert">
-                                <ActionIcon
-                                    size="lg"
-                                    variant={selectedTool === 'alert' ? 'filled' : 'light'}
-                                    color="tacticalOrange"
-                                    onClick={() => handleToolSelect('alert')}
-                                >
-                                    <IconAlertTriangle size={18} />
-                                </ActionIcon>
-                            </Tooltip>
-                            <Tooltip label="Waypoint">
-                                <ActionIcon
-                                    size="lg"
-                                    variant={selectedTool === 'waypoint' ? 'filled' : 'light'}
-                                    color="tacticalBlue"
-                                    onClick={() => handleToolSelect('waypoint')}
-                                >
-                                    <IconFlag size={18} />
-                                </ActionIcon>
-                            </Tooltip>
-                            <Tooltip label="Measure Distance">
-                                <ActionIcon
-                                    size="lg"
-                                    variant={selectedTool === 'measure' ? 'filled' : 'light'}
-                                    color="tacticalCyan"
-                                    onClick={() => handleToolSelect('measure')}
-                                >
-                                    <IconRuler size={18} />
-                                </ActionIcon>
-                            </Tooltip>
-                            <Tooltip label="Draw Line">
-                                <ActionIcon
-                                    size="lg"
-                                    variant={selectedTool === 'line' ? 'filled' : 'light'}
-                                    color="tacticalOrange"
-                                    onClick={() => handleToolSelect('line')}
-                                >
-                                    <IconRoute size={18} />
-                                </ActionIcon>
-                            </Tooltip>
-                            <Tooltip label="Draw Circle">
-                                <ActionIcon
-                                    size="lg"
-                                    variant={selectedTool === 'circle' ? 'filled' : 'light'}
-                                    color="tacticalCyan"
-                                    onClick={() => handleToolSelect('circle')}
-                                >
-                                    <IconCircle size={18} />
-                                </ActionIcon>
-                            </Tooltip>
-                            <Tooltip label="Draw Polygon">
-                                <ActionIcon
-                                    size="lg"
-                                    variant={selectedTool === 'polygon' ? 'filled' : 'light'}
-                                    color="tacticalGreen"
-                                    onClick={() => handleToolSelect('polygon')}
-                                >
-                                    <IconPolygon size={18} />
-                                </ActionIcon>
-                            </Tooltip>
-                            <Tooltip label="Draw Rectangle">
-                                <ActionIcon
-                                    size="lg"
-                                    variant={selectedTool === 'rectangle' ? 'filled' : 'light'}
-                                    color="tacticalBlue"
-                                    onClick={() => handleToolSelect('rectangle')}
-                                >
-                                    <IconRectangle size={18} />
-                                </ActionIcon>
-                            </Tooltip>
-                            <Tooltip label="Clear All">
-                                <ActionIcon
-                                    size="lg"
-                                    variant="light"
-                                    color="tacticalRed"
-                                    onClick={handleClearAll}
-                                >
-                                    <IconTrash size={18} />
-                                </ActionIcon>
-                            </Tooltip>
-                        </Group>
-                    </Stack>
+                    <Accordion
+                        variant="contained"
+                        defaultValue="markers"
+                        styles={{
+                            item: {
+                                backgroundColor: 'rgba(100, 255, 218, 0.05)',
+                                border: '1px solid rgba(100, 255, 218, 0.2)',
+                                marginBottom: '8px',
+                            },
+                            control: {
+                                color: '#64ffda',
+                                fontWeight: 700,
+                                fontSize: '12px',
+                                textTransform: 'uppercase',
+                                letterSpacing: '1px',
+                            },
+                            chevron: {
+                                color: '#64ffda',
+                            },
+                            content: {
+                                padding: '12px',
+                            },
+                        }}
+                    >
+                        <Accordion.Item value="markers">
+                            <Accordion.Control>
+                                <Group gap="xs">
+                                    <IconMapPin size={16} />
+                                    <Text>Markers</Text>
+                                </Group>
+                            </Accordion.Control>
+                            <Accordion.Panel>
+                                <Group gap="xs" wrap="wrap">
+                                    <Tooltip label="Self Marker">
+                                        <ActionIcon
+                                            size="lg"
+                                            variant={selectedTool === 'marker' ? 'filled' : 'light'}
+                                            color="tacticalCyan"
+                                            onClick={() => handleToolSelect('marker')}
+                                        >
+                                            <IconMapPin size={18} />
+                                        </ActionIcon>
+                                    </Tooltip>
+                                    <Tooltip label="Hostile Marker">
+                                        <ActionIcon
+                                            size="lg"
+                                            variant={selectedTool === 'hostile' ? 'filled' : 'light'}
+                                            color="tacticalRed"
+                                            onClick={() => handleToolSelect('hostile')}
+                                        >
+                                            <IconTarget size={18} />
+                                        </ActionIcon>
+                                    </Tooltip>
+                                    <Tooltip label="Friendly Marker">
+                                        <ActionIcon
+                                            size="lg"
+                                            variant={selectedTool === 'friendly' ? 'filled' : 'light'}
+                                            color="tacticalGreen"
+                                            onClick={() => handleToolSelect('friendly')}
+                                        >
+                                            <IconUsers size={18} />
+                                        </ActionIcon>
+                                    </Tooltip>
+                                    <Tooltip label="Waypoint">
+                                        <ActionIcon
+                                            size="lg"
+                                            variant={selectedTool === 'waypoint' ? 'filled' : 'light'}
+                                            color="tacticalBlue"
+                                            onClick={() => handleToolSelect('waypoint')}
+                                        >
+                                            <IconFlag size={18} />
+                                        </ActionIcon>
+                                    </Tooltip>
+                                </Group>
+                            </Accordion.Panel>
+                        </Accordion.Item>
+
+                        <Accordion.Item value="tactical">
+                            <Accordion.Control>
+                                <Group gap="xs">
+                                    <IconAlertTriangle size={16} />
+                                    <Text>Tactical</Text>
+                                </Group>
+                            </Accordion.Control>
+                            <Accordion.Panel>
+                                <Group gap="xs" wrap="wrap">
+                                    <Tooltip label="CASEVAC">
+                                        <ActionIcon
+                                            size="lg"
+                                            variant={selectedTool === 'casevac' ? 'filled' : 'light'}
+                                            color="tacticalRed"
+                                            onClick={() => handleToolSelect('casevac')}
+                                        >
+                                            <IconFirstAidKit size={18} />
+                                        </ActionIcon>
+                                    </Tooltip>
+                                    <Tooltip label="Alert">
+                                        <ActionIcon
+                                            size="lg"
+                                            variant={selectedTool === 'alert' ? 'filled' : 'light'}
+                                            color="tacticalOrange"
+                                            onClick={() => handleToolSelect('alert')}
+                                        >
+                                            <IconAlertTriangle size={18} />
+                                        </ActionIcon>
+                                    </Tooltip>
+                                </Group>
+                            </Accordion.Panel>
+                        </Accordion.Item>
+
+                        <Accordion.Item value="drawing">
+                            <Accordion.Control>
+                                <Group gap="xs">
+                                    <IconPencil size={16} />
+                                    <Text>Drawing Tools</Text>
+                                </Group>
+                            </Accordion.Control>
+                            <Accordion.Panel>
+                                <Group gap="xs" wrap="wrap">
+                                    <Tooltip label="Measure Distance">
+                                        <ActionIcon
+                                            size="lg"
+                                            variant={selectedTool === 'measure' ? 'filled' : 'light'}
+                                            color="tacticalCyan"
+                                            onClick={() => handleToolSelect('measure')}
+                                        >
+                                            <IconRuler size={18} />
+                                        </ActionIcon>
+                                    </Tooltip>
+                                    <Tooltip label="Draw Line">
+                                        <ActionIcon
+                                            size="lg"
+                                            variant={selectedTool === 'line' ? 'filled' : 'light'}
+                                            color="tacticalOrange"
+                                            onClick={() => handleToolSelect('line')}
+                                        >
+                                            <IconRoute size={18} />
+                                        </ActionIcon>
+                                    </Tooltip>
+                                    <Tooltip label="Draw Circle">
+                                        <ActionIcon
+                                            size="lg"
+                                            variant={selectedTool === 'circle' ? 'filled' : 'light'}
+                                            color="tacticalCyan"
+                                            onClick={() => handleToolSelect('circle')}
+                                        >
+                                            <IconCircle size={18} />
+                                        </ActionIcon>
+                                    </Tooltip>
+                                    <Tooltip label="Draw Polygon">
+                                        <ActionIcon
+                                            size="lg"
+                                            variant={selectedTool === 'polygon' ? 'filled' : 'light'}
+                                            color="tacticalGreen"
+                                            onClick={() => handleToolSelect('polygon')}
+                                        >
+                                            <IconPolygon size={18} />
+                                        </ActionIcon>
+                                    </Tooltip>
+                                    <Tooltip label="Draw Rectangle">
+                                        <ActionIcon
+                                            size="lg"
+                                            variant={selectedTool === 'rectangle' ? 'filled' : 'light'}
+                                            color="tacticalBlue"
+                                            onClick={() => handleToolSelect('rectangle')}
+                                        >
+                                            <IconRectangle size={18} />
+                                        </ActionIcon>
+                                    </Tooltip>
+                                    <Tooltip label="Clear All">
+                                        <ActionIcon
+                                            size="lg"
+                                            variant="light"
+                                            color="tacticalRed"
+                                            onClick={handleClearAll}
+                                        >
+                                            <IconTrash size={18} />
+                                        </ActionIcon>
+                                    </Tooltip>
+                                </Group>
+                            </Accordion.Panel>
+                        </Accordion.Item>
+                    </Accordion>
 
                     <Divider color="rgba(100, 255, 218, 0.3)" />
 
@@ -1894,7 +1950,7 @@ export default function Map() {
                                     <>
                                         <Divider color="rgba(100, 255, 218, 0.2)" label="Friendly ATAK Users" labelPosition="center" />
                                         <Stack gap={4}>
-                                            {euds.slice(0, 5).map((eud, idx) => (
+                                            {euds.map((eud, idx) => (
                                                 <Paper
                                                     key={idx}
                                                     p="xs"
@@ -1926,11 +1982,6 @@ export default function Map() {
                                                     </Group>
                                                 </Paper>
                                             ))}
-                                            {euds.length > 5 && (
-                                                <Text size="xs" c="dimmed" ta="center">
-                                                    +{euds.length - 5} more users
-                                                </Text>
-                                            )}
                                         </Stack>
                                     </>
                                 )}
@@ -1986,38 +2037,88 @@ export default function Map() {
 
                     <Divider color="rgba(100, 255, 218, 0.3)" />
 
-                    <Stack gap="xs">
-                        <Text size="xs" fw={700} className="text-glow-cyan" style={{ textTransform: 'uppercase', letterSpacing: '1px' }}>
-                            RF Sensors
-                        </Text>
-                        <Switch 
-                            label="Show Sensor Markers"
-                            checked={showSensorData}
-                            onChange={(e) => setShowSensorData(e.currentTarget.checked)}
-                            color="tacticalGreen"
-                            description="Display RF sensor icons on map"
-                        />
-                        <Switch 
-                            label="Show Heatmap"
-                            checked={showHeatmap}
-                            onChange={(e) => setShowHeatmap(e.currentTarget.checked)}
-                            color="tacticalCyan"
-                            description="Visualize sensor data density"
-                        />
-                        {showHeatmap && (
-                            <SegmentedControl
-                                size="xs"
-                                value={heatmapType}
-                                onChange={(value: any) => setHeatmapType(value)}
-                                data={[
-                                    { label: 'Signals', value: 'rf_signals' },
-                                    { label: 'Power', value: 'rf_power' },
-                                    { label: 'Threats', value: 'threat' },
-                                ]}
-                                color="tacticalCyan"
-                            />
-                        )}
-                    </Stack>
+                    {/* Data Layers */}
+                    <Accordion
+                        variant="contained"
+                        styles={{
+                            item: {
+                                backgroundColor: 'rgba(100, 255, 218, 0.05)',
+                                border: '1px solid rgba(100, 255, 218, 0.2)',
+                                marginBottom: '8px',
+                            },
+                            control: {
+                                color: '#64ffda',
+                                fontWeight: 700,
+                                fontSize: '12px',
+                                textTransform: 'uppercase',
+                                letterSpacing: '1px',
+                            },
+                            chevron: {
+                                color: '#64ffda',
+                            },
+                            content: {
+                                padding: '12px',
+                            },
+                        }}
+                    >
+                        <Accordion.Item value="rf-sensors">
+                            <Accordion.Control>
+                                <Group gap="xs">
+                                    <IconActivity size={16} />
+                                    <Text>RF Sensors</Text>
+                                </Group>
+                            </Accordion.Control>
+                            <Accordion.Panel>
+                                <Stack gap="xs">
+                                    <Switch 
+                                        label="Show Sensor Markers"
+                                        checked={showSensorData}
+                                        onChange={(e) => setShowSensorData(e.currentTarget.checked)}
+                                        color="tacticalGreen"
+                                        description="Display RF sensor icons on map"
+                                    />
+                                    <Switch 
+                                        label="Show Heatmap"
+                                        checked={showHeatmap}
+                                        onChange={(e) => setShowHeatmap(e.currentTarget.checked)}
+                                        color="tacticalCyan"
+                                        description="Visualize sensor data density"
+                                    />
+                                    {showHeatmap && (
+                                        <SegmentedControl
+                                            size="xs"
+                                            value={heatmapType}
+                                            onChange={(value: any) => setHeatmapType(value)}
+                                            data={[
+                                                { label: 'Signals', value: 'rf_signals' },
+                                                { label: 'Power', value: 'rf_power' },
+                                                { label: 'Threats', value: 'threat' },
+                                            ]}
+                                            color="tacticalCyan"
+                                        />
+                                    )}
+                                </Stack>
+                            </Accordion.Panel>
+                        </Accordion.Item>
+
+                        <Accordion.Item value="aircraft">
+                            <Accordion.Control>
+                                <Group gap="xs">
+                                    <IconTarget size={16} />
+                                    <Text>Aircraft (ADS-B)</Text>
+                                </Group>
+                            </Accordion.Control>
+                            <Accordion.Panel>
+                                <Switch 
+                                    label="Show Aircraft"
+                                    checked={showADSB}
+                                    onChange={(e) => setShowADSB(e.currentTarget.checked)}
+                                    color="tacticalCyan"
+                                    description="Display ADS-B aircraft tracking"
+                                />
+                            </Accordion.Panel>
+                        </Accordion.Item>
+                    </Accordion>
 
                     <Divider color="rgba(100, 255, 218, 0.3)" />
 
@@ -2035,18 +2136,6 @@ export default function Map() {
                             Mission Planning
                         </Button>
                     </Stack>
-
-                    <Divider color="rgba(100, 255, 218, 0.3)" />
-
-                    <Group gap="xs" align="center" justify="space-between">
-                        <Text size="xs" c="dimmed">ADS-B Aircraft:</Text>
-                        <Switch 
-                            size="xs"
-                            checked={showADSB}
-                            onChange={(e) => setShowADSB(e.currentTarget.checked)}
-                            color="tacticalCyan"
-                        />
-                    </Group>
                 </Stack>
             </Paper>
 
