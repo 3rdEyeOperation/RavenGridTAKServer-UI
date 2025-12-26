@@ -60,6 +60,8 @@ export default function Map() {
     const [showHeatmap, setShowHeatmap] = useState(false);
     const [heatmapData, setHeatmapData] = useState<any[]>([]);
     const [heatmapType, setHeatmapType] = useState<'rf_signals' | 'rf_power' | 'threat'>('rf_signals');
+    const [alerts, setAlerts] = useState<any[]>([]);
+    const [showAlerts, setShowAlerts] = useState(false);
     const mapRef = useRef<L.Map | null>(null);
     const measureLayerRef = useRef<L.LayerGroup>(new L.LayerGroup());
     const drawLayerRef = useRef<L.LayerGroup>(new L.LayerGroup());
@@ -344,6 +346,28 @@ export default function Map() {
     };
 
     const markerStats = getMarkerStats();
+
+    // Fetch alerts data
+    const fetchAlerts = async () => {
+        try {
+            const response = await axios.get(apiRoutes.alerts, {
+                params: { page: 1, per_page: 10 }
+            });
+            
+            if (response.data && response.data.results) {
+                setAlerts(response.data.results);
+            }
+        } catch (error) {
+            console.error('Failed to fetch alerts:', error);
+        }
+    };
+
+    // Fetch alerts on component mount and periodically
+    useEffect(() => {
+        fetchAlerts();
+        const interval = setInterval(fetchAlerts, 30000); // Update every 30s
+        return () => clearInterval(interval);
+    }, []);
 
     function formatDrawer(eud:any, point:any) {
         const detail_rows:ReactElement[] = [];
@@ -1800,6 +1824,48 @@ export default function Map() {
                                         </Paper>
                                     </Grid.Col>
                                 </Grid>
+                                
+                                {/* Active Alerts */}
+                                {alerts.length > 0 && (
+                                    <>
+                                        <Divider color="rgba(100, 255, 218, 0.2)" label="Active Alerts" labelPosition="center" />
+                                        <Stack gap={4}>
+                                            {alerts.slice(0, 3).map((alert, idx) => (
+                                                <Paper
+                                                    key={idx}
+                                                    p="xs"
+                                                    style={{
+                                                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                                                        border: '1px solid rgba(239, 68, 68, 0.3)',
+                                                    }}
+                                                >
+                                                    <Group justify="space-between" gap={4}>
+                                                        <Stack gap={2} style={{ flex: 1 }}>
+                                                            <Group gap={4}>
+                                                                <IconAlertTriangle size={14} color="#ef4444" />
+                                                                <Text size="xs" fw={700} c="tacticalRed">
+                                                                    {alert.alert_type}
+                                                                </Text>
+                                                            </Group>
+                                                            <Text size="xs" c="dimmed">
+                                                                {alert.callsign}
+                                                            </Text>
+                                                        </Stack>
+                                                        <Text size="xs" c="dimmed" style={{ whiteSpace: 'nowrap' }}>
+                                                            {new Date(alert.start_time).toLocaleTimeString()}
+                                                        </Text>
+                                                    </Group>
+                                                </Paper>
+                                            ))}
+                                            {alerts.length > 3 && (
+                                                <Text size="xs" c="dimmed" ta="center">
+                                                    +{alerts.length - 3} more alerts
+                                                </Text>
+                                            )}
+                                        </Stack>
+                                    </>
+                                )}
+                                
                                 <Button
                                     variant="subtle"
                                     size="xs"
