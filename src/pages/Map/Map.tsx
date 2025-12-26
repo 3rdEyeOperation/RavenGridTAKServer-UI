@@ -48,6 +48,7 @@ export default function Map() {
     const [polygonPoints, setPolygonPoints] = useState<L.LatLng[]>([]);
     const [drawMode, setDrawMode] = useState<'none' | 'marker' | 'circle' | 'line' | 'polygon' | 'rectangle' | 'hostile' | 'friendly' | 'waypoint' | 'alert' | 'casevac'>('none');
     const [showADSB, setShowADSB] = useState(true);
+    const [showSensorData, setShowSensorData] = useState(true);
     const [mapStyle, setMapStyle] = useState<'satellite' | 'terrain' | 'dark' | 'tactical'>('satellite');
     const [currentCoords, setCurrentCoords] = useState<{ lat: number; lng: number } | null>(null);
     const [coordinateFormat, setCoordinateFormat] = useState<'DD' | 'DMS' | 'MGRS'>('DD');
@@ -1090,6 +1091,31 @@ export default function Map() {
             });
         }, [showADSB]);
 
+        // Handle Sensor Data toggle - show/hide RF sensor markers
+        useEffect(() => {
+            if (!mapRef.current) return;
+            
+            Object.entries(markers).forEach(([uid, marker]) => {
+                // Check if this marker is an RF sensor
+                const markerElement = marker.getElement();
+                const isSensor = markerElement?.querySelector('svg')?.innerHTML?.includes('sensor') || 
+                                uid.startsWith('RF-') ||
+                                uid.includes('SENSOR'); // RF sensor UID patterns
+                
+                if (isSensor && mapRef.current) {
+                    if (showSensorData) {
+                        if (!mapRef.current.hasLayer(marker)) {
+                            marker.addTo(markersLayer);
+                        }
+                    } else {
+                        if (mapRef.current.hasLayer(marker)) {
+                            mapRef.current.removeLayer(marker);
+                        }
+                    }
+                }
+            });
+        }, [showSensorData]);
+
         useEffect(() => {
             map.addLayer(eudsLayer);
             map.addLayer(rbLinesLayer);
@@ -1809,15 +1835,29 @@ export default function Map() {
 
                     <Divider color="rgba(100, 255, 218, 0.3)" />
 
-                    <Group gap="xs" align="center" justify="space-between">
-                        <Text size="xs" c="dimmed">ADS-B Aircraft:</Text>
-                        <Switch 
-                            size="xs"
-                            checked={showADSB}
-                            onChange={(e) => setShowADSB(e.currentTarget.checked)}
-                            color="tacticalCyan"
-                        />
-                    </Group>
+                    <Stack gap="xs">
+                        <Text size="xs" fw={700} className="text-glow-cyan" style={{ textTransform: 'uppercase', letterSpacing: '1px' }}>
+                            Map Layers
+                        </Text>
+                        <Group gap="xs" align="center" justify="space-between">
+                            <Text size="xs" c="dimmed">ADS-B Aircraft:</Text>
+                            <Switch 
+                                size="xs"
+                                checked={showADSB}
+                                onChange={(e) => setShowADSB(e.currentTarget.checked)}
+                                color="tacticalCyan"
+                            />
+                        </Group>
+                        <Group gap="xs" align="center" justify="space-between">
+                            <Text size="xs" c="dimmed">RF Sensors:</Text>
+                            <Switch 
+                                size="xs"
+                                checked={showSensorData}
+                                onChange={(e) => setShowSensorData(e.currentTarget.checked)}
+                                color="tacticalGreen"
+                            />
+                        </Group>
+                    </Stack>
                 </Stack>
             </Paper>
 
