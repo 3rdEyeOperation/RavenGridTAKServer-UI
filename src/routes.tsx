@@ -15,7 +15,6 @@ const PasswordReset = React.lazy(() => import('./pages/PasswordReset'));
 const ScheduledJobs = React.lazy(() => import('./pages/ScheduledJobs'));
 const VideoRecordings = React.lazy(() => import('./pages/VideoRecordings'));
 const Meshtastic = React.lazy(() => import('./pages/Meshtastic'));
-const Sensor = React.lazy(() => import('./pages/Sensor'));
 const PluginUpdates = React.lazy(() => import('./pages/PluginUpdates'));
 const DeviceProfiles = React.lazy(() => import('./pages/DeviceProfiles'));
 const Missions = React.lazy(() => import('./pages/Missions'))
@@ -43,7 +42,6 @@ const routes = [
   { path: '/jobs', name: 'Scheduled Jobs', element: ScheduledJobs },
   { path: '/video_recordings', name: 'Video Recordings', element: VideoRecordings },
   { path: '/meshtastic', name: 'Meshtastic', element: Meshtastic },
-  { path: '/sensor', name: 'Sensor', element: Sensor },
   { path: '/plugin_updates', name: 'PluginUpdates', element: PluginUpdates },
   { path: '/device_profiles', name: 'DeviceProfiles', element: DeviceProfiles },
   { path: '/missions', name: 'Missions', element: Missions },
