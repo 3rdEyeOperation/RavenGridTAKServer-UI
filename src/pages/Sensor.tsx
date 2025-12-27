@@ -419,8 +419,6 @@ export default function Sensor() {
                 </Tabs.List>
 
                 <Tabs.Panel value="sensors" pt="lg">
-
-                <Tabs.Panel value="sensors" pt="lg">
                     <Grid gutter="md">
                         {filteredSensors.map((sensor) => {
                             const SensorIcon = getSensorIcon();
