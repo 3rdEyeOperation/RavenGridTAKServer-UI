@@ -542,7 +542,7 @@ export default function Sensor() {
                                             {sensor.signal_type && (
                                                 <Group justify="space-between">
                                                     <Text size="sm" c="dimmed">Signal Type:</Text>
-                                                    <Text size="sm" fw={600} style={{ maxWidth: '60%', textAlign: 'right' }}>
+                                                    <Text size="sm" fw={600} c="cyan" style={{ maxWidth: '60%', textAlign: 'right' }}>
                                                         {sensor.signal_type}
                                                     </Text>
                                                 </Group>
@@ -550,14 +550,14 @@ export default function Sensor() {
                                             {sensor.modulation && (
                                                 <Group justify="space-between">
                                                     <Text size="sm" c="dimmed">Modulation:</Text>
-                                                    <Text size="sm">{sensor.modulation}</Text>
+                                                    <Text size="sm" c="gray.3">{sensor.modulation}</Text>
                                                 </Group>
                                             )}
                                             {sensor.power_dbm !== undefined && (
                                                 <Stack gap={4}>
                                                     <Group justify="space-between">
                                                         <Text size="sm" c="dimmed">Signal Strength:</Text>
-                                                        <Text size="sm" fw={600}>{sensor.power_dbm.toFixed(1)} dBm</Text>
+                                                        <Text size="sm" fw={600} c="gray.3">{sensor.power_dbm.toFixed(1)} dBm</Text>
                                                     </Group>
                                                     <Progress
                                                         value={signalStrength}
@@ -569,18 +569,18 @@ export default function Sensor() {
                                             {sensor.snr_db !== undefined && (
                                                 <Group justify="space-between">
                                                     <Text size="sm" c="dimmed">SNR:</Text>
-                                                    <Text size="sm">{sensor.snr_db.toFixed(1)} dB</Text>
+                                                    <Text size="sm" c="gray.3">{sensor.snr_db.toFixed(1)} dB</Text>
                                                 </Group>
                                             )}
                                             {sensor.bandwidth_khz && (
                                                 <Group justify="space-between">
                                                     <Text size="sm" c="dimmed">Bandwidth:</Text>
-                                                    <Text size="sm">{sensor.bandwidth_khz.toFixed(1)} kHz</Text>
+                                                    <Text size="sm" c="gray.3">{sensor.bandwidth_khz.toFixed(1)} kHz</Text>
                                                 </Group>
                                             )}
                                             <Group justify="space-between">
                                                 <Text size="sm" c="dimmed">Last Seen:</Text>
-                                                <Text size="sm">{new Date(sensor.lastSeen).toLocaleString()}</Text>
+                                                <Text size="sm" c="gray.3">{new Date(sensor.lastSeen).toLocaleString()}</Text>
                                             </Group>
                                         </Stack>
 
