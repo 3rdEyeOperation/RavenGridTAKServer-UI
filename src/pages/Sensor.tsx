@@ -90,9 +90,11 @@ export default function Sensor() {
                 }
             });
             
+            let rfMarkers: RFSensor[] = [];
+            
             if (response.data && response.data.results) {
                 // Filter for RF sensor markers (group_name === 'RF_Sensors')
-                const rfMarkers = response.data.results
+                rfMarkers = response.data.results
                     .filter((marker: any) => marker.group_name === 'RF_Sensors')
                     .map((marker: any) => ({
                         id: marker.uid,
@@ -114,39 +116,110 @@ export default function Sensor() {
                         } : undefined,
                         node_id: marker.detail?.sensor?.node_id
                     }));
-                
-                setSensors(rfMarkers);
-                
-                // Convert to RF Detections for map
-                const detections: RFDetection[] = rfMarkers
-                    .filter((s: RFSensor) => s.frequency_mhz && s.location)
-                    .map((s: RFSensor) => ({
-                        sensor_id: s.id,
-                        sensor_name: s.name,
-                        timestamp: s.lastSeen,
-                        frequency_hz: (s.frequency_mhz || 0) * 1e6,
-                        power_dbm: s.power_dbm || -100,
-                        bandwidth_hz: (s.bandwidth_khz || 0) * 1e3,
-                        signal_type: s.signal_type || 'Unknown',
-                        classification: s.signal_type || 'Unclassified',
-                        confidence: s.confidence || 0.5,
-                        location: s.location!,
-                        metadata: {
-                            modulation: s.modulation,
-                            snr_db: s.snr_db
-                        }
-                    }));
-                
-                setRfDetections(detections);
-                
-                // Generate spectrum data from detections
-                const spectrum = detections.map(d => ({
-                    frequency_hz: d.frequency_hz,
-                    power_dbm: d.power_dbm,
-                    timestamp: d.timestamp
-                }));
-                setSpectrumData(spectrum);
             }
+            
+            // Add demo sensors if no real sensors exist
+            if (rfMarkers.length === 0) {
+                const now = new Date().toISOString();
+                rfMarkers = [
+                    {
+                        id: 'demo-seismic-001',
+                        name: 'Seismic Node Alpha',
+                        type: 'rf_scanner' as const,
+                        status: 'online' as const,
+                        lastSeen: now,
+                        frequency_mhz: 433.92,
+                        power_dbm: -75,
+                        bandwidth_khz: 125,
+                        snr_db: 25,
+                        modulation: 'FSK',
+                        signal_type: 'Seismic Sensor',
+                        confidence: 0.95,
+                        location: { lat: 13.7563, lon: 100.5018, alt: 50 },
+                        node_id: 'SEISMIC-A'
+                    },
+                    {
+                        id: 'demo-acoustic-002',
+                        name: 'Acoustic Node Bravo',
+                        type: 'rf_scanner' as const,
+                        status: 'online' as const,
+                        lastSeen: now,
+                        frequency_mhz: 868.1,
+                        power_dbm: -82,
+                        bandwidth_khz: 250,
+                        snr_db: 18,
+                        modulation: 'LoRa',
+                        signal_type: 'Acoustic Sensor',
+                        confidence: 0.88,
+                        location: { lat: 13.7573, lon: 100.5028, alt: 45 },
+                        node_id: 'ACOUSTIC-B'
+                    },
+                    {
+                        id: 'demo-thermal-003',
+                        name: 'Thermal Sensor Charlie',
+                        type: 'rf_scanner' as const,
+                        status: 'online' as const,
+                        lastSeen: now,
+                        frequency_mhz: 915.0,
+                        power_dbm: -68,
+                        bandwidth_khz: 500,
+                        snr_db: 32,
+                        modulation: 'FSK',
+                        signal_type: 'Thermal Sensor',
+                        confidence: 0.92,
+                        location: { lat: 13.7553, lon: 100.5008, alt: 55 },
+                        node_id: 'THERMAL-C'
+                    },
+                    {
+                        id: 'demo-rf-004',
+                        name: 'RF Sensor Delta',
+                        type: 'rf_scanner' as const,
+                        status: 'online' as const,
+                        lastSeen: now,
+                        frequency_mhz: 2450.0,
+                        power_dbm: -55,
+                        bandwidth_khz: 2000,
+                        snr_db: 40,
+                        modulation: 'OFDM',
+                        signal_type: 'RF Scanner',
+                        confidence: 0.98,
+                        location: { lat: 13.7583, lon: 100.5038, alt: 60 },
+                        node_id: 'RF-SCAN-D'
+                    }
+                ];
+            }
+            
+            setSensors(rfMarkers);
+            
+            // Convert to RF Detections for map
+            const detections: RFDetection[] = rfMarkers
+                .filter((s: RFSensor) => s.frequency_mhz && s.location)
+                .map((s: RFSensor) => ({
+                    sensor_id: s.id,
+                    sensor_name: s.name,
+                    timestamp: s.lastSeen,
+                    frequency_hz: (s.frequency_mhz || 0) * 1e6,
+                    power_dbm: s.power_dbm || -100,
+                    bandwidth_hz: (s.bandwidth_khz || 0) * 1e3,
+                    signal_type: s.signal_type || 'Unknown',
+                    classification: s.signal_type || 'Unclassified',
+                    confidence: s.confidence || 0.5,
+                    location: s.location!,
+                    metadata: {
+                        modulation: s.modulation,
+                        snr_db: s.snr_db
+                    }
+                }));
+            
+            setRfDetections(detections);
+            
+            // Generate spectrum data from detections
+            const spectrum = detections.map(d => ({
+                frequency_hz: d.frequency_hz,
+                power_dbm: d.power_dbm,
+                timestamp: d.timestamp
+            }));
+            setSpectrumData(spectrum);
         } catch (error) {
             console.error('Error fetching sensors:', error);
             notifications.show({
