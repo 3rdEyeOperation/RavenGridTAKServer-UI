@@ -473,6 +473,14 @@ export default function Sensor() {
                 title="RF Sensor Integration"
                 color="tacticalBlue"
                 variant="light"
+                styles={{
+                    root: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.7)',
+                        borderColor: 'rgba(100, 255, 218, 0.3)'
+                    },
+                    title: { color: '#64ffda' },
+                    message: { color: '#e2e8f0' }
+                }}
             >
                 Monitor RF spectrum activity from RavenGridSensor devices. Real-time detection and classification of RF signals across VLF to mmWave frequencies.
             </Alert>
@@ -505,9 +513,11 @@ export default function Sensor() {
                                         padding="md"
                                         className="tactical-card"
                                         style={{
+                                            backgroundColor: 'rgba(15, 23, 42, 0.8)',
                                             borderColor: sensor.status === 'online' 
                                                 ? 'rgba(100, 255, 218, 0.4)' 
                                                 : 'rgba(136, 136, 136, 0.3)',
+                                            border: '1px solid'
                                         }}
                                     >
                                         <Group justify="space-between" mb="xs">
@@ -624,7 +634,7 @@ export default function Sensor() {
                     </Grid>
 
                     {filteredSensors.length === 0 && !loading && (
-                        <Paper shadow="md" p="xl" className="tactical-card" ta="center">
+                        <Paper shadow="md" p="xl" className="tactical-card" ta="center" style={{ backgroundColor: 'rgba(15, 23, 42, 0.7)', border: '1px solid rgba(100, 255, 218, 0.2)' }}>
                             <IconRadar size={48} className="text-glow-cyan" style={{ opacity: 0.5 }} />
                             <Text size="lg" c="dimmed" mt="md">
                                 {searchQuery || filterStatus !== 'all'
@@ -640,7 +650,7 @@ export default function Sensor() {
                     )}
 
                     {loading && (
-                        <Paper shadow="md" p="xl" className="tactical-card" ta="center">
+                        <Paper shadow="md" p="xl" className="tactical-card" ta="center" style={{ backgroundColor: 'rgba(15, 23, 42, 0.7)', border: '1px solid rgba(100, 255, 218, 0.2)' }}>
                             <Text size="lg" c="dimmed">
                                 Loading RF sensors...
                             </Text>
@@ -649,7 +659,7 @@ export default function Sensor() {
                 </Tabs.Panel>
 
                 <Tabs.Panel value="map" pt="lg">
-                    <Paper shadow="md" className="tactical-card" style={{ height: '70vh', overflow: 'hidden' }}>
+                    <Paper shadow="md" className="tactical-card" style={{ height: '70vh', overflow: 'hidden', backgroundColor: 'rgba(15, 23, 42, 0.7)', border: '1px solid rgba(100, 255, 218, 0.2)' }}>
                         <RFSensorMap
                             sensors={sensors.filter(s => s.location && (s.status === 'online' || s.status === 'offline')).map(s => ({
                                 id: s.id,
@@ -681,7 +691,7 @@ export default function Sensor() {
                 </Tabs.Panel>
 
                 <Tabs.Panel value="spectrum" pt="lg">
-                    <Paper shadow="md" className="tactical-card" p="md">
+                    <Paper shadow="md" className="tactical-card" p="md" style={{ backgroundColor: 'rgba(15, 23, 42, 0.7)', border: '1px solid rgba(100, 255, 218, 0.2)' }}>
                         <RFSpectrumAnalyzer
                             data={spectrumData}
                             minFreqMHz={1}
