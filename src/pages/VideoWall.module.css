@@ -1,65 +1,20 @@
-.video-wall-grid {
-    position: relative;
-    min-height: 600px;
-}
-
-.video-wall-item {
-    background: #1a1b1e;
-    border: 2px solid #373A40;
-    border-radius: 8px;
+.camera-card {
     overflow: hidden;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
     transition: box-shadow 0.2s ease;
 }
 
-.video-wall-item:hover {
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5);
-    border-color: #5474b4;
+.camera-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.drag-handle {
-    background: linear-gradient(135deg, #5474b4 0%, #39588f 100%);
-    padding: 6px 12px;
-    cursor: move;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    user-select: none;
-    height: 30px;
+.camera-header {
+    background: var(--mantine-color-dark-7);
+    border-bottom: 1px solid var(--mantine-color-dark-5);
 }
 
-.drag-handle:hover {
-    background: linear-gradient(135deg, #5f7cb8 0%, #44639f 100%);
-}
-
-/* Light mode adjustments */
 @media (prefers-color-scheme: light) {
-    .video-wall-item {
-        background: #f8f9fa;
-        border-color: #dee2e6;
+    .camera-header {
+        background: var(--mantine-color-gray-0);
+        border-bottom: 1px solid var(--mantine-color-gray-3);
     }
-    
-    .video-wall-item:hover {
-        border-color: #5474b4;
-    }
-}
-
-/* React Grid Layout overrides */
-.react-grid-item.react-grid-placeholder {
-    background: rgba(84, 116, 180, 0.2);
-    border: 2px dashed #5474b4;
-    border-radius: 8px;
-}
-
-.react-grid-item.resizing {
-    opacity: 0.9;
-}
-
-.react-grid-item > .react-resizable-handle {
-    background: none;
-}
-
-.react-grid-item > .react-resizable-handle::after {
-    border-color: #5474b4;
-    border-width: 0 2px 2px 0;
 }

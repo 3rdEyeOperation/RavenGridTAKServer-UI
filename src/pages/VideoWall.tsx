@@ -1,9 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Group, LoadingOverlay, Stack, Title, Text, Badge } from '@mantine/core';
-import { IconLayoutGrid, IconPlus, IconMinus } from '@tabler/icons-react';
-import GridLayout from 'react-grid-layout';
-import 'react-grid-layout/css/styles.css';
-import 'react-resizable/css/styles.css';
+import { 
+    Button, 
+    Card, 
+    Grid, 
+    Group, 
+    LoadingOverlay, 
+    Stack, 
+    Title, 
+    Text, 
+    Badge,
+    SegmentedControl,
+    ActionIcon,
+    Tooltip
+} from '@mantine/core';
+import { 
+    IconLayoutGrid, 
+    IconMaximize,
+    IconX,
+} from '@tabler/icons-react';
 import axios from '../axios_config';
 import { apiRoutes } from '../apiRoutes';
 import { notifications } from '@mantine/notifications';
@@ -17,42 +31,26 @@ interface VideoStream {
     ready: boolean;
 }
 
-interface LayoutItem {
-    i: string;
-    x: number;
-    y: number;
-    w: number;
-    h: number;
-    minW?: number;
-    minH?: number;
-}
-
 export default function VideoWall() {
     const [videoStreams, setVideoStreams] = useState<VideoStream[]>([]);
     const [selectedStreams, setSelectedStreams] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
-    const [layout, setLayout] = useState<LayoutItem[]>([]);
-    const [gridCols, setGridCols] = useState(12);
-    const [rowHeight, setRowHeight] = useState(150);
+    const [gridLayout, setGridLayout] = useState<string>('2x2');
+    const [maximizedStream, setMaximizedStream] = useState<string | null>(null);
 
     useEffect(() => {
         getVideoStreams();
     }, []);
-
-    useEffect(() => {
-        // Generate layout when selected streams change
-        generateLayout();
-    }, [selectedStreams]);
 
     function getVideoStreams() {
         setLoading(true);
         axios.get(apiRoutes.video_streams, { 
             params: { page: 1, per_page: 100 } 
         })
-        .then((r: any) => {
+        .then((res: any) => {
             setLoading(false);
-            if (r.status === 200) {
-                setVideoStreams(r.data.results.filter((s: VideoStream) => s.ready));
+            if (res.data && res.data.items) {
+                setVideoStreams(res.data.items);
             }
         })
         .catch((err: any) => {
@@ -66,40 +64,13 @@ export default function VideoWall() {
         });
     }
 
-    function generateLayout() {
-        const numStreams = selectedStreams.length;
-        if (numStreams === 0) {
-            setLayout([]);
-            return;
-        }
-
-        // Calculate optimal grid layout
-        const cols = Math.ceil(Math.sqrt(numStreams));
-        const rows = Math.ceil(numStreams / cols);
-        const cellWidth = Math.floor(gridCols / cols);
-        const cellHeight = 2;
-
-        const newLayout: LayoutItem[] = selectedStreams.map((streamPath: string, index: number) => {
-            const col = index % cols;
-            const row = Math.floor(index / cols);
-            
-            return {
-                i: streamPath,
-                x: col * cellWidth,
-                y: row * cellHeight,
-                w: cellWidth,
-                h: cellHeight,
-                minW: 2,
-                minH: 1,
-            };
-        });
-
-        setLayout(newLayout);
-    }
-
     function toggleStream(path: string) {
         setSelectedStreams((prev: string[]) => {
             if (prev.includes(path)) {
+                // Remove if maximized
+                if (maximizedStream === path) {
+                    setMaximizedStream(null);
+                }
                 return prev.filter((p: string) => p !== path);
             } else {
                 return [...prev, path];
@@ -113,122 +84,169 @@ export default function VideoWall() {
 
     function clearAllStreams() {
         setSelectedStreams([]);
+        setMaximizedStream(null);
     }
 
-    const onLayoutChange = (newLayout: LayoutItem[]) => {
-        setLayout(newLayout);
-    };
+    function getGridColumns(): number {
+        switch (gridLayout) {
+            case '1x1': return 1;
+            case '2x2': return 2;
+            case '3x3': return 3;
+            case '4x4': return 4;
+            default: return 2;
+        }
+    }
+
+    function toggleMaximize(path: string) {
+        setMaximizedStream(maximizedStream === path ? null : path);
+    }
 
     return (
         <>
             <LoadingOverlay visible={loading} zIndex={1000} overlayProps={{ radius: "sm", blur: 2, fixed: true }} />
             
             <Stack gap="md">
-                <Group justify="space-between">
-                    <Title order={2}>
-                        <IconLayoutGrid size={28} style={{ marginRight: 8, verticalAlign: 'middle' }} />
-                        {t('Video Wall')}
-                    </Title>
-                    <Badge size="lg" variant="light">
-                        {selectedStreams.length} / {videoStreams.length} {t('streams')}
-                    </Badge>
+                <Group justify="space-between" mb="md">
+                    <Group>
+                        <Title order={2}>
+                            <IconLayoutGrid size={28} style={{ marginRight: 8, verticalAlign: 'middle' }} />
+                            {t('Live View')}
+                        </Title>
+                        <Badge size="lg" variant="light">
+                            {selectedStreams.length} / {videoStreams.length}
+                        </Badge>
+                    </Group>
+                    
+                    <Group gap="sm">
+                        <SegmentedControl
+                            value={gridLayout}
+                            onChange={setGridLayout}
+                            data={[
+                                { label: '1×1', value: '1x1' },
+                                { label: '2×2', value: '2x2' },
+                                { label: '3×3', value: '3x3' },
+                                { label: '4×4', value: '4x4' },
+                            ]}
+                            disabled={maximizedStream !== null}
+                        />
+                        <Button 
+                            onClick={selectAllStreams}
+                            size="sm"
+                            variant="light"
+                            disabled={selectedStreams.length === videoStreams.length}
+                        >
+                            {t('All')}
+                        </Button>
+                        <Button 
+                            onClick={clearAllStreams}
+                            size="sm"
+                            variant="light"
+                            color="red"
+                            disabled={selectedStreams.length === 0}
+                        >
+                            {t('Clear')}
+                        </Button>
+                    </Group>
                 </Group>
 
-                <Group gap="sm">
-                    <Button 
-                        onClick={selectAllStreams}
-                        leftSection={<IconPlus size={16} />}
-                        disabled={selectedStreams.length === videoStreams.length}
-                    >
-                        {t('Select All')}
-                    </Button>
-                    <Button 
-                        onClick={clearAllStreams}
-                        leftSection={<IconMinus size={16} />}
-                        color="red"
-                        disabled={selectedStreams.length === 0}
-                    >
-                        {t('Clear All')}
-                    </Button>
-                </Group>
-
+                {/* Camera Selection */}
                 {videoStreams.length === 0 ? (
-                    <Text c="dimmed" ta="center" mt="xl">
-                        {t('No video streams available. Add streams from the Video Streams page.')}
-                    </Text>
-                ) : (
-                    <>
-                        <Text size="sm" c="dimmed">
-                            {t('Click on streams to add/remove from video wall:')}
+                    <Card withBorder p="xl" style={{ textAlign: 'center' }}>
+                        <Text c="dimmed" size="sm">
+                            {t('No cameras available. Add cameras from the Video Streams page.')}
                         </Text>
+                    </Card>
+                ) : (
+                    <Card withBorder p="xs" mb="md">
                         <Group gap="xs">
                             {videoStreams.map((stream: VideoStream) => (
                                 <Button
                                     key={stream.path}
                                     onClick={() => toggleStream(stream.path)}
-                                    variant={selectedStreams.includes(stream.path) ? 'filled' : 'outline'}
-                                    size="compact-sm"
+                                    variant={selectedStreams.includes(stream.path) ? 'filled' : 'subtle'}
+                                    size="xs"
+                                    radius="md"
                                 >
                                     {stream.path}
-                                    {stream.username && ` (${stream.username})`}
                                 </Button>
                             ))}
                         </Group>
-                    </>
+                    </Card>
                 )}
 
+                {/* Video Grid */}
                 {selectedStreams.length > 0 && (
-                    <div style={{ marginTop: 20 }}>
-                        <Text size="sm" c="dimmed" mb="sm">
-                            {t('Drag and resize video windows. Double-click to maximize.')}
-                        </Text>
-                        <GridLayout
-                            className="video-wall-grid"
-                            layout={layout}
-                            cols={gridCols}
-                            rowHeight={rowHeight}
-                            width={1200}
-                            onLayoutChange={onLayoutChange}
-                            draggableHandle=".drag-handle"
-                            isDraggable
-                            isResizable
-                            compactType="vertical"
-                            preventCollision={false}
-                        >
-                            {selectedStreams.map((streamPath: string) => {
-                                const stream = videoStreams.find((s: VideoStream) => s.path === streamPath);
-                                if (!stream) return null;
+                    <Grid gutter="md">
+                        {selectedStreams.slice(0, maximizedStream ? undefined : getGridColumns() * getGridColumns()).map((streamPath: string) => {
+                            const stream = videoStreams.find((s: VideoStream) => s.path === streamPath);
+                            if (!stream) return null;
+                            if (maximizedStream && maximizedStream !== streamPath) return null;
 
-                                return (
-                                    <div key={streamPath} className="video-wall-item">
-                                        <div className="drag-handle">
-                                            <Text size="xs" fw={500} c="white">
-                                                {stream.path}
-                                            </Text>
-                                            <Button
-                                                size="compact-xs"
-                                                color="red"
-                                                onClick={() => toggleStream(streamPath)}
-                                            >
-                                                ✕
-                                            </Button>
+                            const isMaximized = maximizedStream === streamPath;
+
+                            return (
+                                <Grid.Col 
+                                    key={streamPath} 
+                                    span={isMaximized ? 12 : { base: 12, sm: 6, md: 12 / getGridColumns() }}
+                                >
+                                    <Card withBorder p={0} className="camera-card">
+                                        {/* Camera Header */}
+                                        <Group justify="space-between" p="xs" className="camera-header">
+                                            <Group gap="xs">
+                                                <Badge size="sm" variant="dot" color="green">
+                                                    {stream.path}
+                                                </Badge>
+                                                {stream.username && (
+                                                    <Text size="xs" c="dimmed">
+                                                        {stream.username}
+                                                    </Text>
+                                                )}
+                                            </Group>
+                                            <Group gap={4}>
+                                                <Tooltip label={isMaximized ? t('Exit Fullscreen') : t('Fullscreen')}>
+                                                    <ActionIcon 
+                                                        variant="subtle" 
+                                                        size="sm"
+                                                        onClick={() => toggleMaximize(streamPath)}
+                                                    >
+                                                        <IconMaximize size={16} />
+                                                    </ActionIcon>
+                                                </Tooltip>
+                                                <Tooltip label={t('Remove')}>
+                                                    <ActionIcon 
+                                                        variant="subtle" 
+                                                        size="sm" 
+                                                        color="red"
+                                                        onClick={() => toggleStream(streamPath)}
+                                                    >
+                                                        <IconX size={16} />
+                                                    </ActionIcon>
+                                                </Tooltip>
+                                            </Group>
+                                        </Group>
+
+                                        {/* Video Player */}
+                                        <div style={{ position: 'relative', paddingBottom: isMaximized ? '56.25%' : '56.25%', height: 0 }}>
+                                            <iframe
+                                                src={`${stream.hls_link}?jwt=${localStorage.getItem('token')}`}
+                                                title={stream.path}
+                                                style={{
+                                                    position: 'absolute',
+                                                    top: 0,
+                                                    left: 0,
+                                                    width: '100%',
+                                                    height: '100%',
+                                                    border: 0,
+                                                }}
+                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                allowFullScreen
+                                            />
                                         </div>
-                                        <iframe
-                                            src={`${stream.hls_link}?jwt=${localStorage.getItem('token')}`}
-                                            title={stream.path}
-                                            style={{
-                                                width: '100%',
-                                                height: 'calc(100% - 30px)',
-                                                border: 0,
-                                            }}
-                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                            allowFullScreen
-                                        />
-                                    </div>
-                                );
-                            })}
-                        </GridLayout>
-                    </div>
+                                    </Card>
+                                </Grid.Col>
+                            );
+                        })}
+                    </Grid>
                 )}
             </Stack>
         </>
