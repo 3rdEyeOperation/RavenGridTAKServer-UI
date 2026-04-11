@@ -5,9 +5,12 @@ import {
     Image, LoadingOverlay,
     Modal,
     Table,
+    TextInput,
+    Select,
+    Group,
 } from '@mantine/core';
 import React, { useEffect, useState } from 'react';
-import { IconCheck, IconCircleMinus, IconDownload, IconPlayerPlay, IconX } from '@tabler/icons-react';
+import { IconCheck, IconCircleMinus, IconDownload, IconPlayerPlay, IconSearch, IconX } from '@tabler/icons-react';
 import './VideoRecordings.module.css';
 import ReactPlayer from 'react-player';
 import { intervalToDuration, formatDuration } from 'date-fns';
@@ -65,6 +68,8 @@ export default function VideoRecordings() {
         columnAccessor: 'path',
         direction: 'asc',
     });
+    const [pathFilter, setPathFilter] = useState('');
+    const [availablePaths, setAvailablePaths] = useState<string[]>([]);
 
     function getVideoRecordings() {
         if (loading) return;
@@ -76,7 +81,8 @@ export default function VideoRecordings() {
                     page: activePage,
                     per_page: pageSize,
                     sort_by: sortStatus.columnAccessor,
-                    sort_direction: sortStatus.direction
+                    sort_direction: sortStatus.direction,
+                    path: pathFilter || undefined
 
                 } }
         ).then(r => {
@@ -84,8 +90,10 @@ export default function VideoRecordings() {
             if (r.status === 200) {
                 setRecordingCount(r.data.total);
                 let recordings: VideoRecording[] = [];
+                const paths = new Set<string>();
 
                 r.data.results.map((row: VideoRecording) => {
+                    paths.add(row.path);
 
                     row.thumbnail_image = <Image src={row.thumbnail} onClick={() => {
                         setThumbnail(row.thumbnail);
@@ -136,6 +144,11 @@ export default function VideoRecordings() {
                 setPage(r.data.current_page);
                 setTotalPages(r.data.total_pages);
                 setVideoRecordings(recordings);
+                
+                // Update available paths if not filtering
+                if (!pathFilter && paths.size > 0) {
+                    setAvailablePaths(Array.from(paths).sort());
+                }
             }
         }).catch(err => {
             setLoading(false);
@@ -157,6 +170,11 @@ export default function VideoRecordings() {
     useEffect(() => {
         getVideoRecordings();
     }, [activePage, sortStatus]);
+
+    useEffect(() => {
+        setPage(1);
+        getVideoRecordings();
+    }, [pathFilter]);
 
     function deleteVideoRecording() {
         setLoading(true);
@@ -189,6 +207,19 @@ export default function VideoRecordings() {
         <>
             <LoadingOverlay visible={loading} zIndex={1000} overlayProps={{ radius: "sm", blur: 2, fixed: true }} />
 
+            <Group mb="md">
+                <Select
+                    placeholder={t("Filter by Camera/Path")}
+                    leftSection={<IconSearch size={16} />}
+                    data={[{ value: '', label: t('All Cameras') }, ...availablePaths.map(p => ({ value: p, label: p }))]}
+                    value={pathFilter}
+                    onChange={(value) => setPathFilter(value || '')}
+                    clearable
+                    searchable
+                    style={{ minWidth: 300 }}
+                />
+            </Group>
+
             <Table.ScrollContainer minWidth="100%">
                 <DataTable
                     withTableBorder
@@ -203,7 +234,7 @@ export default function VideoRecordings() {
                         {accessor: "path", title: t("Path"), sortable: true}, {accessor: "formatted_file_size", title: t("File Size"), sortable: true},
                         {accessor: "video_codec", title: t("Video Codec"), sortable: true}, {accessor: "formatted_video_bitrate", title: t("Video Bitrate"), sortable: true},
                         {accessor: "audio_codec", title: t("Audio Codec"), sortable: true}, {accessor: "formatted_audio_bitrate", title: t("Audio Bitrate"), sortable: true},
-                        {accessor: "watch_button", title: t("Watch")}, {accessor: "download_button", title: t("Download")}
+                        {accessor: "watch_button", title: t("Watch")}, {accessor: "download_button", title: t("Download")}, {accessor: "delete_button", title: t("Delete")}
                     ]}
                     page={activePage}
                     onPageChange={(p) => setPage(p)}

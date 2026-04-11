@@ -13,12 +13,13 @@ import {
     Image, LoadingOverlay
 } from '@mantine/core';
 import React, { useEffect, useState } from 'react';
-import { IconCheck, IconCircleMinus, IconPlus, IconVideo, IconX } from '@tabler/icons-react';
+import { IconCheck, IconCircleMinus, IconPlus, IconVideo, IconX, IconLayoutGrid } from '@tabler/icons-react';
 import { notifications } from '@mantine/notifications';
 import axios from '../axios_config';
 import { apiRoutes } from '../apiRoutes';
 import {t} from "i18next";
 import {DataTable, DataTableSortStatus} from "mantine-datatable";
+import { useNavigate } from 'react-router';
 
 interface VideoStream {
     thumbnail: string;
@@ -60,6 +61,7 @@ export default function VideoStreams() {
         columnAccessor: 'path',
         direction: 'asc',
     });
+    const navigate = useNavigate();
 
     function setRecord(path:string, record:boolean) {
         setLoading(true)
@@ -263,6 +265,7 @@ export default function VideoStreams() {
         <>
             <LoadingOverlay visible={loading} zIndex={1000} overlayProps={{ radius: "sm", blur: 2, fixed: true }} />
 
+            <Button onClick={() => { navigate('/video_wall'); }} mb="md" mr="md" leftSection={<IconLayoutGrid size={14} />} variant="light">Video Wall</Button>
             <Button onClick={() => { setAddVideoOpened(true); }} mb="md" mr="md" leftSection={<IconPlus size={14} />}>Add Video</Button>
             <Tooltip
               multiline

@@ -1,0 +1,9 @@
+# Don't commit sensitive data
+.env
+config.json
+*.log
+
+# Don't commit generated files
+__pycache__/
+*.pyc
+*.pyo

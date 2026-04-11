@@ -14,6 +14,7 @@ const Alerts = React.lazy(() => import('./pages/Alerts'));
 const PasswordReset = React.lazy(() => import('./pages/PasswordReset'));
 const ScheduledJobs = React.lazy(() => import('./pages/ScheduledJobs'));
 const VideoRecordings = React.lazy(() => import('./pages/VideoRecordings'));
+const VideoWall = React.lazy(() => import('./pages/VideoWall'));
 const Meshtastic = React.lazy(() => import('./pages/Meshtastic'));
 const PluginUpdates = React.lazy(() => import('./pages/PluginUpdates'));
 const DeviceProfiles = React.lazy(() => import('./pages/DeviceProfiles'));
@@ -36,6 +37,7 @@ const routes = [
   { path: '/casevac', name: 'CasEvac', element: Casevac },
   { path: '/data_packages', name: 'DataPackages', element: DataPackages },
   { path: '/video_streams', name: 'VideoStreams', element: VideoStreams },
+  { path: '/video_wall', name: 'Video Wall', element: VideoWall },
   { path: '/users', name: 'Users', element: Users },
   { path: '/tfa_setup', name: '2FA Setup', element: TFASetup },
   { path: '/reset', name: 'Password Reset', element: PasswordReset },

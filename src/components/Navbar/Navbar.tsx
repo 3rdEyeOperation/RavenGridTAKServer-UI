@@ -26,7 +26,7 @@ import {
     IconPlugConnected,
     IconPlug,
     IconCircleMinus,
-    IconUsersGroup, IconLink, IconUser
+    IconUsersGroup, IconLink, IconUser, IconLayoutGrid
 } from '@tabler/icons-react';
 import {
     NavLink,
@@ -61,6 +61,7 @@ const navbarLinks = [
     { link: '/casevac', label: t('CasEvac'), icon: IconHeartbeat },
     { link: '/data_packages', label: t('Data Packages'), icon: IconPackage },
     { link: '/video_streams', label: t('Video Streams'), icon: IconVideo },
+    { link: '/video_wall', label: t('Video Wall'), icon: IconLayoutGrid },
     { link: '/video_recordings', label: t('Video Recordings'), icon: IconMovie },
     { link: '/meshtastic', label: t('Meshtastic'), icon: MeshtasticLogo },
     { link: '/missions', label: t('Missions'), icon: IconRefresh },
