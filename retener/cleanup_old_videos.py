@@ -53,7 +53,7 @@ def cleanup_old_recordings():
             if filename and os.path.exists(filename):
                 try:
                     os.remove(filename)
-                    print(f"  ✓ Deleted: {filename}")
+                    print(f"  ✓ Deleted video: {filename}")
                 except Exception as e:
                     print(f"  ✗ Error deleting {filename}: {e}")
                     file_delete_errors += 1
@@ -62,12 +62,42 @@ def cleanup_old_recordings():
             if thumbnail and os.path.exists(thumbnail):
                 try:
                     os.remove(thumbnail)
+                    print(f"  ✓ Deleted thumbnail: {thumbnail}")
                 except Exception as e:
                     print(f"  ✗ Error deleting thumbnail: {e}")
+                    file_delete_errors += 1
             
             # Delete from database
             cur.execute("DELETE FROM video_recording WHERE id = %s", (rec_id,))
             deleted_count += 1
+        
+        # Clean up orphaned thumbnails (thumbnails without corresponding video files)
+        cur.execute("""
+            SELECT id, filename, thumbnail 
+           orphaned_thumbnails > 0:
+            print(f"  Cleaned up {orphaned_thumbnails} orphaned thumbnails")
+        if  FROM video_recording 
+            WHERE thumbnail IS NOT NULL
+        """)
+        
+        all_recordings = cur.fetchall()
+        orphaned_thumbnails = 0
+        
+        for rec_id, filename, thumbnail in all_recordings:
+            # If video file doesn't exist but thumbnail does, delete thumbnail
+            if thumbnail and os.path.exists(thumbnail):
+                if not filename or not os.path.exists(filename):
+                    try:
+                        os.remove(thumbnail)
+                        print(f"  ✓ Deleted orphaned thumbnail: {thumbnail}")
+                        # Update database to clear thumbnail reference
+                        cur.execute("UPDATE video_recording SET thumbnail = NULL WHERE id = %s", (rec_id,))
+                        orphaned_thumbnails += 1
+                    except Exception as e:
+                        print(f"  ✗ Error deleting orphaned thumbnail: {e}")
+        
+        if orphaned_thumbnails > 0:
+            print(f"  Cleaned up {orphaned_thumbnails} orphaned thumbnails")
         
         conn.commit()
         cur.close()

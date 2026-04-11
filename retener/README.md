@@ -6,9 +6,13 @@ Automated cleanup scripts for deleting old video recordings based on retention p
 
 These scripts will automatically delete video recordings older than the specified retention period:
 - Deletes video files from filesystem
-- Deletes thumbnails
+- Deletes thumbnails (both old recordings and orphaned thumbnails)
 - Removes database records from PostgreSQL
 - **Does NOT modify OpenTAKServer code**
+
+### What Gets Deleted:
+1. **Old Recordings**: Video files, thumbnails, and DB records older than retention period
+2. **Orphaned Thumbnails**: Thumbnail files that exist but their video file is missing
 
 ## Files
 
