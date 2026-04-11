@@ -326,12 +326,89 @@ systemctl restart mediamtx
 
 ---
 
+### MediaMTX Won't Start - Connection Refused on Port 9997
+
+**Symptoms:**
+- Server logs show: `ConnectionRefusedError: [Errno 111] Connection refused` on port 9997
+- OpenTAKServer can't connect to MediaMTX API
+- Video recording/streaming doesn't work
+
+**Diagnosis:**
+
+```bash
+# Check MediaMTX service status
+sudo systemctl status mediamtx
+
+# Check if MediaMTX is listening on port 9997
+sudo ss -tlnp | grep 9997
+
+# View MediaMTX logs
+sudo journalctl -u mediamtx -n 50 --no-pager
+
+# Check MediaMTX config
+sudo cat /etc/mediamtx/mediamtx.yml | grep -A5 "api:"
+```
+
+**Common Fixes:**
+
+1. **MediaMTX service not running:**
+   ```bash
+   sudo systemctl start mediamtx
+   sudo systemctl enable mediamtx  # Auto-start on boot
+   ```
+
+2. **MediaMTX not installed:**
+   ```bash
+   sudo apt update
+   sudo apt install mediamtx
+   ```
+
+3. **Wrong API port in MediaMTX config:**
+   
+   Edit `/etc/mediamtx/mediamtx.yml`:
+   ```yaml
+   api: yes
+   apiAddress: 127.0.0.1:9997
+   ```
+   
+   Then restart:
+   ```bash
+   sudo systemctl restart mediamtx
+   ```
+
+4. **Port 9997 already in use:**
+   ```bash
+   sudo lsof -i :9997  # Check what's using the port
+   ```
+
+5. **Firewall blocking port:**
+   ```bash
+   sudo ufw allow 9997/tcp  # If using UFW
+   ```
+
+6. **Check OpenTAKServer config:**
+   
+   Verify OpenTAKServer is configured to use correct MediaMTX address:
+   ```bash
+   # Check OTS config for mediamtx settings
+   grep -i mediamtx /path/to/opentakserver/config
+   ```
+
+**After fixing, restart both services:**
+```bash
+sudo systemctl restart mediamtx
+sudo systemctl restart opentakserver
+```
+
+---
+
 ## Support
 
 For issues related to:
 - **UI features**: Check OpenTAKServer-UI repository
 - **Database schema**: Check OpenTAKServer repository
 - **MediaMTX path issues**: Use `restart_mediamtx.sh` script above
+- **MediaMTX won't start**: Follow troubleshooting steps above
 - **This script**: Create issue in this repository
 
 ---

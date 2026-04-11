@@ -9,32 +9,61 @@
 #   Manual: sudo ./restart_mediamtx.sh
 #   Cron:   */30 * * * * /path/to/restart_mediamtx.sh
 
-echo "[$(date)] Restarting MediaMTX to clear stale paths..."
+LOG_FILE="/var/log/mediamtx_restart.log"
 
-# Check if MediaMTX is running
+log() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
+}
+
+log "========== MediaMTX Restart Script Started =========="
+
+# Check if MediaMTX service exists
+if ! systemctl list-unit-files | grep -q "mediamtx.service"; then
+    log "ERROR: MediaMTX service not found. Is MediaMTX installed?"
+    log "Install with: sudo apt install mediamtx  OR  check installation"
+    exit 1
+fi
+
+# Check current MediaMTX status
 if systemctl is-active --quiet mediamtx; then
-    echo "MediaMTX is running, restarting..."
+    log "MediaMTX is running, restarting to clear stale paths..."
     systemctl restart mediamtx
     
     # Wait for MediaMTX to fully restart
-    sleep 3
+    sleep 5
     
     # Verify MediaMTX started successfully
     if systemctl is-active --quiet mediamtx; then
-        echo "[$(date)] MediaMTX restarted successfully"
+        log "SUCCESS: MediaMTX restarted successfully"
         
-        # Optional: Restart OpenTAKServer to re-establish connections
-        # Uncomment if needed
-        # systemctl restart opentakserver
-        # echo "[$(date)] OpenTAKServer restarted"
+        # Check if port 9997 is listening
+        if ss -tlnp | grep -q ":9997"; then
+            log "SUCCESS: MediaMTX API listening on port 9997"
+        else
+            log "WARNING: MediaMTX running but port 9997 not listening"
+            log "Check MediaMTX config: /etc/mediamtx/mediamtx.yml"
+        fi
     else
-        echo "[$(date)] ERROR: MediaMTX failed to restart"
+        log "ERROR: MediaMTX failed to restart"
+        log "Last 20 lines of MediaMTX logs:"
+        journalctl -u mediamtx -n 20 --no-pager | tee -a "$LOG_FILE"
         exit 1
     fi
 else
-    echo "MediaMTX is not running, starting..."
+    log "WARNING: MediaMTX is NOT running, attempting to start..."
     systemctl start mediamtx
-    echo "[$(date)] MediaMTX started"
+    sleep 5
+    
+    if systemctl is-active --quiet mediamtx; then
+        log "SUCCESS: MediaMTX started"
+    else
+        log "ERROR: MediaMTX failed to start"
+        log "MediaMTX status:"
+        systemctl status mediamtx --no-pager | tee -a "$LOG_FILE"
+        log "Last 20 lines of MediaMTX logs:"
+        journalctl -u mediamtx -n 20 --no-pager | tee -a "$LOG_FILE"
+        exit 1
+    fi
 fi
 
-echo "[$(date)] Path cleanup complete"
+log "========== MediaMTX Restart Complete =========="
