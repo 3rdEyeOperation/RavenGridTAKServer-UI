@@ -273,11 +273,65 @@ Remove-Item -Recurse retener/
 
 ---
 
+## Troubleshooting
+
+### EUDs Can't Login After Using Video Recording (Port 8089 SSL)
+
+**Symptoms:**
+- EUDs can't connect to OpenTAKServer after video recording/streaming
+- Server logs show: `Failed to add path echo* to mediamtx. Status code 400 {"error":"path already exists"}`
+- Connection errors on port 8089 (SSL)
+
+**Root Cause:**
+MediaMTX keeps streaming paths (echo4, echo6, echo7, echo8) in memory even after EUDs disconnect or recordings are deleted. When EUDs try to reconnect, OpenTAKServer can't recreate the paths → authentication fails.
+
+**Immediate Fix:**
+```bash
+sudo systemctl restart mediamtx
+sudo systemctl restart opentakserver
+```
+
+**Permanent Solution (Automated):**
+
+Use the included `restart_mediamtx.sh` script:
+
+```bash
+# Make executable
+chmod +x retener/restart_mediamtx.sh
+
+# Test manually
+sudo ./retener/restart_mediamtx.sh
+
+# Add to cron (every 30 minutes)
+sudo crontab -e
+```
+
+Add this line:
+```
+*/30 * * * * /path/to/retener/restart_mediamtx.sh
+```
+
+Or run nightly at 3 AM:
+```
+0 3 * * * /path/to/retener/restart_mediamtx.sh
+```
+
+**Alternative - Restart on Deletion:**
+
+If you want MediaMTX to restart only when recordings are deleted, add to your cleanup script:
+```bash
+# After deleting recordings
+systemctl restart mediamtx
+```
+
+---
+
 ## Support
 
 For issues related to:
 - **UI features**: Check OpenTAKServer-UI repository
 - **Database schema**: Check OpenTAKServer repository
+- **MediaMTX path issues**: Use `restart_mediamtx.sh` script above
 - **This script**: Create issue in this repository
 
 ---
