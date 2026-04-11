@@ -178,7 +178,7 @@ export default function Dashboard() {
                         <Flex><Text fw={700}>Code Name:</Text><Space w="md" /><Text>{osRelease.VERSION_CODENAME}</Text></Flex>
                     </Paper>
                     <Paper shadow="xl" withBorder radius="md" p="xl" mr="md" mb="md">
-                        <Center mb="md"><Title order={4}>OpenTAKServer</Title></Center>
+                        <Center mb="md"><Title order={4}>RavenGridAI</Title></Center>
                         <Flex><Text fw={700}>Version:</Text><Space w="md" /><Text>{ots.version}</Text></Flex>
                         <Flex><Text fw={700}>UI Version:</Text><Space w="md" /><Text>{versions.gitTag}</Text></Flex>
                         <Flex><Text fw={700}>UI Commit Hash:</Text><Space w="md" /><Text>{versions.gitCommitHash}</Text></Flex>

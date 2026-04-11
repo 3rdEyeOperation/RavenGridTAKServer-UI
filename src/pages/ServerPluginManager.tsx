@@ -82,7 +82,7 @@ export default function ServerPluginManager() {
             setInstallingPlugin(false);
             notifications.show({
                 title: 'Success',
-                message: `Please restart OpenTAKServer and refresh your browser`,
+                message: `Please restart RavenGridAI and refresh your browser`,
                 icon: <IconCheck />,
                 color: 'green',
             })
@@ -374,7 +374,7 @@ export default function ServerPluginManager() {
 
             <Modal withCloseButton={showModelClose} title={commandOutputTitle} closeOnClickOutside={false} closeOnEscape={false} w="50vw" size="xl" opened={showCommandOutput} onClose={() => {setShowCommandOutput(false); setCommandOutput("")}}>
                 <CodeMirror extensions={[scrollBottom]} lang="shell" maxHeight="60vh" value={commandOutput} height="100%" theme={computedColorScheme} readOnly />
-                <Text mt="md" ta="center" fw={700} display={refreshButtonDisabled ? "none" : "block"}>Please restart OpenTAKServer and refresh your browser.</Text>
+                <Text mt="md" ta="center" fw={700} display={refreshButtonDisabled ? "none" : "block"}>Please restart RavenGridAI and refresh your browser.</Text>
                 <Center><Button mt="md" disabled={refreshButtonDisabled} onClick={() => window.location.reload()}>Refresh Browser</Button></Center>
             </Modal>
         </>

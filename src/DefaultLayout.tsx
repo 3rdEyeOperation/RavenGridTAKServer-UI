@@ -117,7 +117,7 @@ export function DefaultLayout() {
                             </Menu.Target>
 
                             <Menu.Dropdown>
-                                <Menu.Label>OpenTAKServer</Menu.Label>
+                                <Menu.Label>RavenGridAI</Menu.Label>
                                 <Menu.Divider />
                                 <Menu.Item
                                     leftSection={<IconUser size={14} />} onClick={() => {navigate('/profile')}}>

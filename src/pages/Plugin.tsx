@@ -93,7 +93,7 @@ export default function Plugin() {
             console.log(err);
             notifications.show({
                 title: t("Failed to get plugin config"),
-                message: t("Please restart OpenTAKServer"),
+                message: t("Please restart RavenGridAI"),
                 icon: <IconX />,
                 color: 'red'
             })

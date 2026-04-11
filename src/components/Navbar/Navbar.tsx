@@ -278,9 +278,8 @@ export default function Navbar() {
                 <NavLink className={classes.link} key="2faSettings" component={Link} to="/tfa_setup" leftSection={<Icon2fa className={classes.linkIcon} stroke={1.5} />} label={t("Setup 2FA")} />
                 <NavLink className={classes.link} key="darkModeSwitch" leftSection={<IconMoonStars className={classes.linkIcon} stroke={1.5} />} rightSection={<DarkModeSwitch />} label={t("Dark Mode")} />
                 <NavLink className={classes.link} key="support" leftSection={<IconHelp className={classes.linkIcon} stroke={1.5} />} label={t("Support")} >
-                    <NavLink className={classes.link} key="docs" onClick={() => window.open("https://docs.opentakserver.io", "_blank")} leftSection={<IconBook className={classes.linkIcon} stroke={1.5} />} label={t("Documentation")} />
-                    <NavLink className={classes.link} key="discord" onClick={() => window.open("https://discord.gg/6uaVHjtfXN", "_blank")} leftSection={<IconBrandDiscord className={classes.linkIcon} stroke={1.5} />} label={t("Discord")} />
-                    <NavLink className={classes.link} key="github" onClick={() => window.open("https://github.com/brian7704/OpenTAKServer", "_blank")} leftSection={<IconBrandGithub className={classes.linkIcon} stroke={1.5} />} label={t("Github")} />
+                    <NavLink className={classes.link} key="docs" onClick={() => window.open("https://3rdechelon.io", "_blank")} leftSection={<IconBook className={classes.linkIcon} stroke={1.5} />} label={t("Documentation")} />
+                    <NavLink className={classes.link} key="github" onClick={() => window.open("https://github.com/3rdEyeOperation/RavenGridTAKServer-UI", "_blank")} leftSection={<IconBrandGithub className={classes.linkIcon} stroke={1.5} />} label={t("Github")} />
                 </NavLink>
                 <NavLink component={Link} to="/profile" className={classes.link} key="profile" leftSection={<IconUser className={classes.linkIcon} stroke={1.5} />} label={t("Profile")} />
                 <NavLink className={classes.link} key="logout" leftSection={<IconLogout className={classes.linkIcon} stroke={1.5} />} label={t("Log Out")} onClick={() => logout()} />
@@ -331,7 +330,7 @@ export default function Navbar() {
                     <Paper p="md" shadow="xl" withBorder bg="white">
                         <QRCode size={350} value={atakQR.qr_string} quietZone={10} logoImage={Logo} eyeRadius={50} ecLevel="L" qrStyle="dots" logoWidth={100} logoHeight={100} />
                     </Paper>
-                    <Tooltip label={t("Tap here if you're reading this on the EUD you want to connect to OpenTAKServer")}>
+                    <Tooltip label={t("Tap here if you're reading this on the EUD you want to connect to RavenGridAI")}>
                         <Button component="a" href={atakQR.qr_string}>{t("Open ATAK")}</Button>
                     </Tooltip>
                     <Text ta="center" fw={700}>{t("Remember to treat this QR code like a password and don't share it with anyone.")}</Text>
